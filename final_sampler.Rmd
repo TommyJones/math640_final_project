@@ -1,0 +1,128 @@
+---
+title: "final_project"
+author: "Thomas W. Jones"
+date: "4/18/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Define the model
+
+$y \sim multinom(n,\theta) \implies \mathcal{L}(y|\theta,\alpha,\beta) \propto \prod_k \theta_k^{y_k}$
+
+$\theta \sim Dir(\vec{\alpha}) \implies \pi(\theta) = \mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}$
+
+$\alpha_k \sim Pareto(1, \beta) \implies \pi(\vec{\alpha}) = \prod_k\beta\alpha_k^{-(\beta + 1)}$
+
+$\pi(\beta) \propto 1$
+
+# Derive posterior distributions
+
+\begin{align}
+  P(\theta,\alpha,\beta|y) 
+    &\propto \left[\prod_k \theta_k^{y_k}\right] 
+      \left[\mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}\right]
+      \left[\prod_k\beta\alpha_k^{-(\beta + 1)}\right]\\
+    &= \beta^K\mathcal{B}(\vec{\alpha})
+      \prod_k\theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
+  P(\theta|\alpha,\beta,y)
+    &\propto \prod_k \theta_k^{y_k+\alpha_k - 1}\\
+    &\implies \theta|\alpha,\beta,y \sim Dir(\vec{y} + \vec{\alpha}-1)\\
+  P(\alpha|\theta,\beta,y) 
+    &\propto \mathcal{B}(\vec{\alpha})
+      \prod_k \theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
+    &\implies \text{unknown distribution}\\
+  P(\beta|\theta,\alpha,y)
+    &\propto \beta^K(\prod_k\alpha_k)^{-(\beta + 1)}\\
+    &\propto \beta^K(\prod_k\alpha_k)^{-\beta}\\
+    &\implies \text{unknown distribution}
+\end{align}
+
+
+# Write a sampler
+
+```{r}
+
+library(textmineR)
+library(gtools)
+
+docs <- nih_sample$ABSTRACT_TEXT
+names(docs) <- nih_sample$APPLICATION_ID
+
+dtm <- CreateDtm(docs, stopword_vec = c(), verbose = FALSE)
+
+y <- colSums(dtm)
+
+B <- 100
+
+theta <- matrix(0, nrow = B, ncol = length(y))
+
+theta[ 1 , ] <- y / sum(y)
+
+alpha <- matrix(0, nrow = B, ncol = length(y))
+
+alpha[ 1, ] <- 0.01
+
+acc_alpha <- numeric(B)
+
+f_alpha <- function(x, beta, theta, y){
+  # exp(out)
+  
+  # (gamma(sum(x)) / prod(gamma(x))) * prod(theta ^ (y + x - 1) * x ^ (-(beta - 1)))
+  
+  out <- (lgamma(sum(x)) - sum(lgamma(x))) + 
+    sum((y + x - 1) * log(theta) + (-(beta - 1)) * log(x))
+  
+  out
+}
+
+beta <- numeric(B)
+
+beta[ 1 ] <- 0.5
+
+acc_beta <- numeric(B)
+
+f_beta <- function(x, alpha) {
+  # exp(out)
+  out <- length(alpha) * log(x) - x * sum(log(alpha))
+  
+  out
+}
+
+for (j in 2:B) {
+  
+  # sample theta
+  theta[ j , ] <- rdirichlet(1, y + alpha[ j - 1 , ] - 1)
+  
+  # sample alpha
+  alpha_star <- rbeta(1, 2, 2)
+  
+  u <- runif(1)
+  
+  r <- (p(x = alpha_star, sigma2 = sigma2, mu = mu) / 
+          p(x = alpha[ j - 1 ], sigma2 = sigma2, mu = mu) ) /
+    (dbeta(alpha_star, 2, 2)/ dbeta(alpha[ j - 1 ], 2, 2)) 
+    
+  
+  if (u < min(1, r)) {
+    alpha[ j ] <- alpha_star
+    acc[ j ] <- 1
+  } else {
+    alpha[ j ] <- alpha[ j - 1 ]
+    acc[ j ] <- 0
+  }
+
+  
+  # sample beta
+  
+  
+}
+
+
+
+```
+
+
