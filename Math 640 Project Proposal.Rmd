@@ -1,0 +1,46 @@
+---
+title: "Math 640 Project Proposal"
+author: "Max Kearns and Tommy Jones"
+date: "April 22, 2018"
+output: pdf_document
+geometry: margin=.8in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tinytex)
+```
+
+## Introduction
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This project will focus on two goals. The first is to introduce the class to the world of text data, as well as to a particular model that can be used to predict word frequencies in a corpus of documents. The second goal of this project is to explore a novel prior on a well-used model.   
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In homework 4, we explored a multinomial likelihood with a dirichlet prior. This resulted in a neat dirichlet posterior. This model is frequently used to model simple text data with some success. However, in this model there is no uncertainty on the dirichlet paremeter, but there is some information with which we can place a prior on $\alpha$. 
+
+##Text Data and Zipf's Law
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In this part of the presentation we will make a brief case for why text data is important, and why modeling that data is not very well understood. Next, we will explore some features of text data, including Zipf's law, an interesting phenomenon that provides a basis for our choice of prior. Zipf's law is a particular type of power law, and the pareto distribution is one common way of producing a power law density. Because of this feature of text data, we are choosing a power law pareto distribution as the prior on $\alpha$.
+
+##Model and Analysis
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; This model uses a pareto prior on $\alpha$, which is a novel way to analyze text data. Because this is an untested process we will run a trial with this model using MCMC methods. For data we will use 100 randomly sampled NIH grant proposals from 2014. This will allow us to summarize the posterior of $\mathbf{\theta}$, which is a vector of word probabilities of unique words in a corpus of documents. From there, we will feed the mode of our posterior sample of $\mathbf{\theta}$ back into a multinomial B times to get replicated data, which we will compare to our original data set. In order to evaluate this model, we will compare to the traditional model that doesn't allow for uncertainty on $\alpha$. We will compare these two models with the WAIC, as well as an analysis of the replicated data from each model. This comparison should provide insight as to the efficacy of this new model, and whether it merits further study.     
+
+##Model Derivation
+
+$\mathcal{L}(\mathbf{z}| \mathbf{\theta})\propto \prod_{k=1} \limits^{K}\theta_{k}^{z_{k}}$&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\pi(\mathbf{\theta} |\mathbf{\alpha})=\frac{\Gamma(\sum \limits_{k=1}^K\alpha_k)}{\prod \limits_{k=1}^K\Gamma(\alpha_k)}\prod \limits_{k=1}^K \theta_{k}^{\alpha_k-1}$&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\pi(\mathbf{\alpha})=\prod \limits_{k=1}^K\frac{\beta}{\mathbf{\alpha_k}^{\beta+1}}$
+
+$p(\mathbf{\theta}, \mathbf{\alpha}, \mathbf{\beta|}\mathbf{z})\propto \prod_{k=1} \limits^{K}\theta_{k}^{z_{k}}\times\frac{\Gamma(\sum \limits_{k=1}^K\alpha_k)}{\prod \limits_{k=1}^K\Gamma(\alpha_k)}\prod \limits_{k=1}^K \theta_{k}^{\alpha_k-1}\times\prod \limits_{k=1}^K\frac{\beta}{\mathbf{\alpha_k}^{\beta+1}}$
+
+$p(\mathbf{\theta}, \mathbf{\alpha}, \mathbf{\beta|}\mathbf{z}) \propto \beta^k \mathcal{B}(\mathbf{\alpha})\prod_{k=1} \limits^{K}\mathbf{\theta}_k^{z_k+\alpha_k-1}\alpha^{-(\beta+1)}$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
