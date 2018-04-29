@@ -3,6 +3,8 @@ library(gtools)
 
 k <- 20
 
+set.seed(220)
+
 # a <- colSums(nih_sample_dtm)
 # 
 # a <- a[ order(a, decreasing = TRUE) ]
@@ -16,18 +18,18 @@ y <- y[ order(y, decreasing = TRUE) ]
 y <- y[ 1:k ]
 
 set.seed(10)
-theta <- rdirichlet(1, a)
+# theta <- rdirichlet(1, a)
 
 
-Beta <- function(alpha) {
-  gamma(sum(alpha)) / prod(gamma(alpha))
+lBeta <- function(alpha) {
+  lgamma(sum(alpha)) - sum(lgamma(alpha))
 }
 
 f_alpha <- function(alpha, theta, beta, log = TRUE){
   
   # out <- Beta(alpha) * prod(theta ^ (alpha - 1) * alpha ^ -(beta + 1))
   
-  out <- log(Beta(alpha)) + sum(alpha - 1  * log(theta) -(beta + 1) * log(alpha))
+  out <- lBeta(alpha) + sum(alpha - 1  * log(theta) -(beta + 1) * log(alpha))
   
   if (! log)
     out <- exp(out)
@@ -57,6 +59,18 @@ J_alpha <- function(beta, k) {
   
 }
 
+J_alpha_a <- function(x, beta, k) {
+  prod(EnvStats::dpareto(x, location = 1, s = beta))
+}
+
+J_beta <- function(beta) {
+  rgamma(1, beta, 3)
+}
+
+J_beta_a <- function(x, beta) {
+  dgamma(x, beta, 3)
+}
+
 # set up sampler
 B <- 1000
 
@@ -81,13 +95,13 @@ acc_beta <- numeric(B)
 for (j in 2:B) {
   
   # sample theta
-  theta <- rdirichlet(1, y + alpha[j-1,])
+  theta[j,] <- rdirichlet(1, y + alpha[j-1,])
   
   # sample alpha
-  alpha_star <- J_alpha(beta[j-1], )
+  alpha_star <- J_alpha(beta[j-1], ncol(alpha))
   
   r1 <- (f_alpha(alpha_star, theta[j-1,], beta[j-1]) - f_alpha(alpha[j-1,], theta[j-1,], beta[j-1])) - 
-    (J_alpha(alpha_star) - J_alpha(alpha[j-1,]))
+    (log(J_alpha_a(alpha_star, ncol(alpha))) - log(J_alpha_a(alpha[j-1,], ncol(alpha))))
   
   r1 <- exp(r1)
   
@@ -95,13 +109,27 @@ for (j in 2:B) {
   
   if (u < min(r1, 1)) {
     alpha[j,] <- alpha_star
-    acc_alpha <- 1
+    acc_alpha[j] <- 1
   } else {
     alpha[j,] <- alpha[j-1,]
   }
   
   # sample beta
+  beta_star <- J_beta(beta[j-1])
   
+  r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1])) -
+    (log(J_beta_a(beta_star,beta[j-1])) - log(J_beta_a(beta[j-1], beta[j-1])))
+  
+  r2 <- exp(r2)
+  
+  u <- runif(1)
+  
+  if (u < min(r2, 1)) {
+    beta[j] <- beta_star
+    acc_beta[j] <- 1
+  } else {
+    beta[j] <- beta[j-1]
+  }
   
   
 }
