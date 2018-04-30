@@ -29,7 +29,7 @@ f_alpha <- function(alpha, theta, beta, log = TRUE){
   
   # out <- Beta(alpha) * prod(theta ^ (alpha - 1) * alpha ^ -(beta + 1))
   
-  out <- lBeta(alpha) + sum(alpha - 1  * log(theta) -(beta + 1) * log(alpha))
+  out <- lBeta(alpha) + sum((alpha - 1)  * log(theta) -(beta + 1) * log(alpha))
   
   if (! log)
     out <- exp(out)
@@ -59,20 +59,34 @@ J_alpha <- function(beta, k) {
   
 }
 
-J_alpha_a <- function(x, beta, k) {
-  prod(EnvStats::dpareto(x, location = 1, s = beta))
+J_alpha_a <- function(x, beta, k, log = TRUE) {
+  
+  out <- sum(log(EnvStats::dpareto(x, location = 1, s = beta)))
+  
+  if (! log)
+    out <- exp(out)
+  
+  out
 }
 
 J_beta <- function(beta) {
-  rgamma(1, beta, 3)
+  # rgamma(1, beta, 3)
+  out <- rnorm(1, mean = beta, sd = 1)
+  
+  if (out <= 0) {
+    out <- 0.001
+  }
+  
+  out
 }
 
 J_beta_a <- function(x, beta) {
-  dgamma(x, beta, 3)
+  # dgamma(x, beta, 3)
+  dnorm(x, mean = beta, sd = 1)
 }
 
 # set up sampler
-B <- 1000
+B <- 20000
 
 theta <- matrix(0, nrow = B, ncol = k)
 
@@ -86,7 +100,7 @@ acc_alpha <- numeric(B)
 
 beta <- numeric(B)
 
-beta[ 1 ] <- 1
+beta[ 1 ] <- 2
 
 acc_beta <- numeric(B)
 
@@ -101,7 +115,7 @@ for (j in 2:B) {
   alpha_star <- J_alpha(beta[j-1], ncol(alpha))
   
   r1 <- (f_alpha(alpha_star, theta[j-1,], beta[j-1]) - f_alpha(alpha[j-1,], theta[j-1,], beta[j-1])) - 
-    (log(J_alpha_a(alpha_star, ncol(alpha))) - log(J_alpha_a(alpha[j-1,], ncol(alpha))))
+    (J_alpha_a(alpha_star, beta[j-1], ncol(alpha)) - J_alpha_a(alpha[j-1,], beta[j-1], ncol(alpha)))
   
   r1 <- exp(r1)
   
@@ -115,10 +129,12 @@ for (j in 2:B) {
   }
   
   # sample beta
-  beta_star <- J_beta(beta[j-1])
+  beta_star <- J_beta(beta[j-1]) # beta[j-1]
   
-  r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1])) -
-    (log(J_beta_a(beta_star,beta[j-1])) - log(J_beta_a(beta[j-1], beta[j-1])))
+  # r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1])) -
+  #   (log(J_beta_a(beta_star,beta[j-1])) - log(J_beta_a(beta[j-1], beta[j-1])))
+  
+  r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1]))
   
   r2 <- exp(r2)
   
@@ -134,4 +150,8 @@ for (j in 2:B) {
   
 }
 
+mean(acc_alpha)
 
+mean(acc_beta)
+
+mcmcplots::mcmcplot1(matrix(beta,ncol = 1))
