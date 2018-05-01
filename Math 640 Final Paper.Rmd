@@ -1,0 +1,77 @@
+---
+title: "Math 640 Final Paper"
+author: "Max Kearns and Tommy Jones"
+date: "April 30, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+\newpage
+# Introduction
+
+The analysis of text data is an area of vital research in both frequentist and Bayesian statistics. Text can, and indeed does, store a vast amount of information that is not easily evaluated with well-understood statistical methods. While text analysis is used throughout our economy, it does not have nearly as much research and knowledge behind it as does numerical data. This paper attempts to slightly further the bank of techniques for text analysis, in the hopes that text data will someday be as understood as numerical data is today. 
+
+One method that researchers currently use to model text frequencies is called Latent Dirichlet Allocation. This is an example of a topic model that allows researchers to find word frequencies in documents across various topics. Typically, this model makes use of a multinomial likelihood, with a Dirichlet prior on the probability of the inclusion of each word ($\theta$). The usual model then fixes the Dirichlet parameter ($\alpha$). In a Bayesian setting, however, this approach seems overly simplistic, and MCMC methods provide a simple solution to sample from a more complex distribution. This research intends to start to answer the question as to whether more uncertainty on $\alpha$ would improve the model. Zipf's law provides a basis for how to vary $\alpha$ in a way that is consistent with knowledge about human language. 
+
+Zipf's law is an empirical property of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. This means that the most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. (citations needed) Based on what Zipf's law dictates, this research tests the viability of placing a Pareto(1, $\beta$) prior on $\alpha$. This Pareto distribution is a power-law that should provide some uncertainty on $\alpha$ that mirrors the inherent property of language.  
+
+In order to determine whether this prior merits further research on more complex models, we will begin by modeling a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, and a pareto hyper-prior. The data set is 100 randomly sampled NIH grant proposals from 2014.
+
+
+
+$y \sim multinom(n,\theta) \implies \mathcal{L}(y|\theta,\alpha,\beta) \propto \prod_k \theta_k^{y_k}$
+
+$\theta \sim Dir(\vec{\alpha}) \implies \pi(\theta) = \mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}$
+
+$\alpha_k \sim Pareto(1, \beta) \implies \pi(\vec{\alpha}) = \prod_k\beta\alpha_k^{-(\beta + 1)}$
+
+$\pi(\beta) \propto 1$
+
+\begin{align}
+  P(\theta,\alpha,\beta|y) 
+    &\propto \left[\prod_k \theta_k^{y_k}\right] 
+      \left[\mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}\right]
+      \left[\prod_k\beta\alpha_k^{-(\beta + 1)}\right]\\
+    &= \beta^K\mathcal{B}(\vec{\alpha})
+      \prod_k\theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
+  P(\theta|\alpha,\beta,y)
+    &\propto \prod_k \theta_k^{y_k+\alpha_k - 1}\\
+    &\implies \theta|\alpha,\beta,y \sim Dir(\vec{y} + \vec{\alpha}-1)\\
+  P(\alpha|\theta,\beta,y) 
+    &\propto \mathcal{B}(\vec{\alpha})
+      \prod_k \theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
+    &\implies \text{unknown distribution}\\
+  P(\beta|\theta,\alpha,y)
+    &\propto \beta^K(\prod_k\alpha_k)^{-(\beta + 1)}\\
+    &\propto \beta^K(\prod_k\alpha_k)^{-\beta}\\
+    &\implies \text{unknown distribution}
+\end{align}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
