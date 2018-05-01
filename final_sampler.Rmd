@@ -30,7 +30,7 @@ $\pi(\beta) \propto 1$
       \prod_k\theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
   P(\theta|\alpha,\beta,y)
     &\propto \prod_k \theta_k^{y_k+\alpha_k - 1}\\
-    &\implies \theta|\alpha,\beta,y \sim Dir(\vec{y} + \vec{\alpha}-1)\\
+    &\implies \theta|\alpha,\beta,y \sim Dir(\vec{y} + \vec{\alpha})\\
   P(\alpha|\theta,\beta,y) 
     &\propto \mathcal{B}(\vec{\alpha})
       \prod_k \theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
