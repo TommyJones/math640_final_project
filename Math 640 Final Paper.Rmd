@@ -4,7 +4,6 @@ author: "Max Kearns and Tommy Jones"
 date: "May 10, 2018"
 output:
   pdf_document:
-    toc: true
     number_sections: true
 ---
 
@@ -70,6 +69,8 @@ Of these conditional posteriors, only $\theta|\alpha,\beta,y$ is a known distrib
 The other two conditionals will be sampled from using a Metropolis-Hastings algorithm with (insert proposals).
 
 ##Sampling
+
+
 
 ##Comparison
 
