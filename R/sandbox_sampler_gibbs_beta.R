@@ -32,20 +32,25 @@ f_alpha <- function(alpha, theta, beta, log = TRUE){
   out
 }
 
-J_alpha <- function(beta, alpha, g) {
-  k <- length(alpha)
+J_alpha <- function(beta, theta) {
+
+  # out <- EnvStats::rpareto(n = length(alpha), location = g, s = beta)
+  # 
+  # out <- sort(out, decreasing = TRUE)
   
-  out <- EnvStats::rpareto(n = k, location = g, s = beta)
-  
-  out <- sort(out, decreasing = TRUE)
+  out <- sapply(theta, function(x) rpareto(n=1, location=x, s=beta))
 
   out
   
 }
 
-J_alpha_a <- function(x, beta, k, g, log = TRUE) {
+J_alpha_a <- function(x, beta, theta, log = TRUE) {
   
-  out <- sum(log(EnvStats::dpareto(x, location = g, s = beta)))
+  # out <- sum(log(EnvStats::dpareto(x, location = g, s = beta)))
+  
+  # out <- sum(sapply(theta, function(y) log(dpareto(x, location = y, s = beta))))
+  
+  out <- sum(log(dpareto(x, location = theta, s = beta)))
   
   if (! log)
     out <- exp(out)
@@ -55,7 +60,7 @@ J_alpha_a <- function(x, beta, k, g, log = TRUE) {
 
 
 # set up sampler
-B <- 2000
+B <- 500
 
 theta <- matrix(0, nrow = B, ncol = k)
 
@@ -82,15 +87,15 @@ for (j in 2:B) {
   theta[j,] <- rdirichlet(1, y + alpha[j-1,])
   
   # sample beta
-  beta[j] <- rgamma(k + a, sum(log(alpha[j-1] - k * log(g))) + b)
+  beta[j] <- rgamma(1, k + a, sum(log(alpha[j-1] - k * log(g))) + b)
   
   # sample alpha
-  alpha_star <- J_alpha(beta[j-1], ncol(alpha), g)
+  alpha_star <- J_alpha(beta = beta[j-1], theta = theta[j-1,])
   
   r1 <- (f_alpha(alpha_star, theta[j-1,], beta[j-1]) - 
            f_alpha(alpha[j-1,], theta[j-1,], beta[j-1])) - 
-    (J_alpha_a(alpha_star, beta[j-1], ncol(alpha), g) - 
-       J_alpha_a(alpha[j-1,], beta[j-1], ncol(alpha), g))
+    (J_alpha_a(alpha_star, beta[j-1], theta[j-1,]) - 
+       J_alpha_a(alpha[j-1,], beta[j-1], theta[j-1,]))
   
   # r1 <- exp(r1)
   
