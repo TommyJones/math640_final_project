@@ -1,7 +1,6 @@
 library(textmineR)
 library(gtools)
 
-k <- 20
 
 set.seed(90210)
 
@@ -14,6 +13,8 @@ set.seed(90210)
 y <- colSums(nih_sample_dtm)
 
 y <- y[ order(y, decreasing = TRUE) ]
+
+k <- length(y) # 20
 
 y <- y[ 1:k ]
 
@@ -69,46 +70,46 @@ J_alpha_a <- function(x, beta, k, log = TRUE) {
   out
 }
 
-# J_beta <- function(a,b) {
-#   out <- rgamma(1, a, b)
-#   # out <- rnorm(1, mean = beta, sd = 1)
+J_beta <- function(a,b) {
+  out <- rgamma(1, a, b)
+  # out <- rnorm(1, mean = beta, sd = 1)
+
+  if (out <= 0) {
+    out <- 0.001
+  }
+
+  out
+}
+
+J_beta_a <- function(x, a, b) {
+  dgamma(x, a, b)
+  # dnorm(x, mean = beta, sd = 1)
+}
+
+
+# J_beta <- function() {
 #   
-#   if (out <= 0) {
-#     out <- 0.001
-#   }
+#   # rgamma(1, 3, 0.5)
+#   
+#   out <- rnorm(1, 3, 0.1)
+#   
+#   if(out <= 0)
+#     out <- 0.0001
 #   
 #   out
+#   
 # }
 # 
-# J_beta_a <- function(x, a, b) {
-#   dgamma(x, a, b)
-#   # dnorm(x, mean = beta, sd = 1)
+# J_beta_a <- function(beta) {
+#   
+#   # dgamma(beta, 3, 0.5)
+#   
+#   dnorm(beta, 3, 0.1)
+#   
 # }
 
-
-J_beta <- function() {
-  
-  # rgamma(1, 3, 0.5)
-  
-  out <- rnorm(1, 3, 0.1)
-  
-  if(out <= 0)
-    out <- 0.0001
-  
-  out
-  
-}
-
-J_beta_a <- function(beta) {
-  
-  # dgamma(beta, 3, 0.5)
-  
-  dnorm(beta, 3, 0.1)
-  
-}
-
 # set up sampler
-B <- 20000
+B <- 1000
 
 theta <- matrix(0, nrow = B, ncol = k)
 
@@ -126,7 +127,7 @@ beta[ 1 ] <- 2
 
 acc_beta <- numeric(B)
 
-a <- .5; b <- 0.1
+a <- 3; b <- 0.5
 
 # run sampler
 
@@ -141,11 +142,11 @@ for (j in 2:B) {
   r1 <- (f_alpha(alpha_star, theta[j-1,], beta[j-1]) - f_alpha(alpha[j-1,], theta[j-1,], beta[j-1])) - 
     (J_alpha_a(alpha_star, beta[j-1], ncol(alpha)) - J_alpha_a(alpha[j-1,], beta[j-1], ncol(alpha)))
   
-  r1 <- exp(r1)
+  # r1 <- exp(r1)
   
   u <- runif(1)
   
-  if (u < min(r1, 1)) {
+  if (log(u) < min(r1, 0)) {
     alpha[j,] <- alpha_star
     acc_alpha[j] <- 1
   } else {
@@ -153,10 +154,10 @@ for (j in 2:B) {
   }
   
   # sample beta
-  beta_star <- J_beta(a = a, b = b) # beta[j-1]
+  beta_star <- J_beta(a = a, b = b) # beta[j-1] a = a, b = b
   
   r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1])) -
-    (log(J_beta_a(beta_star,a = a, b = b)) - 
+    (log(J_beta_a(beta_star, a = a, b = b)) - 
        log(J_beta_a(beta[j-1], a = a, b = b)))
   
   # r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1]))
