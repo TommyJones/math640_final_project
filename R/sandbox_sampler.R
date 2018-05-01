@@ -3,7 +3,7 @@ library(gtools)
 
 k <- 20
 
-set.seed(220)
+set.seed(90210)
 
 # a <- colSums(nih_sample_dtm)
 # 
@@ -69,20 +69,42 @@ J_alpha_a <- function(x, beta, k, log = TRUE) {
   out
 }
 
-J_beta <- function(beta) {
-  # rgamma(1, beta, 3)
-  out <- rnorm(1, mean = beta, sd = 1)
+# J_beta <- function(a,b) {
+#   out <- rgamma(1, a, b)
+#   # out <- rnorm(1, mean = beta, sd = 1)
+#   
+#   if (out <= 0) {
+#     out <- 0.001
+#   }
+#   
+#   out
+# }
+# 
+# J_beta_a <- function(x, a, b) {
+#   dgamma(x, a, b)
+#   # dnorm(x, mean = beta, sd = 1)
+# }
+
+
+J_beta <- function() {
   
-  if (out <= 0) {
-    out <- 0.001
-  }
+  # rgamma(1, 3, 0.5)
+  
+  out <- rnorm(1, 3, 0.1)
+  
+  if(out <= 0)
+    out <- 0.0001
   
   out
+  
 }
 
-J_beta_a <- function(x, beta) {
-  # dgamma(x, beta, 3)
-  dnorm(x, mean = beta, sd = 1)
+J_beta_a <- function(beta) {
+  
+  # dgamma(beta, 3, 0.5)
+  
+  dnorm(beta, 3, 0.1)
+  
 }
 
 # set up sampler
@@ -103,6 +125,8 @@ beta <- numeric(B)
 beta[ 1 ] <- 2
 
 acc_beta <- numeric(B)
+
+a <- .5; b <- 0.1
 
 # run sampler
 
@@ -129,18 +153,19 @@ for (j in 2:B) {
   }
   
   # sample beta
-  beta_star <- J_beta(beta[j-1]) # beta[j-1]
+  beta_star <- J_beta(a = a, b = b) # beta[j-1]
   
-  # r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1])) -
-  #   (log(J_beta_a(beta_star,beta[j-1])) - log(J_beta_a(beta[j-1], beta[j-1])))
+  r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1])) -
+    (log(J_beta_a(beta_star,a = a, b = b)) - 
+       log(J_beta_a(beta[j-1], a = a, b = b)))
   
-  r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1]))
+  # r2 <- (f_beta(beta_star, alpha = alpha[j-1,]) - f_beta(beta[j-1], alpha = alpha[j-1]))
   
-  r2 <- exp(r2)
+  # r2 <- exp(r2)
   
   u <- runif(1)
   
-  if (u < min(r2, 1)) {
+  if (log(u) < min(r2, 0)) {
     beta[j] <- beta_star
     acc_beta[j] <- 1
   } else {
@@ -155,3 +180,7 @@ mean(acc_alpha)
 mean(acc_beta)
 
 mcmcplots::mcmcplot1(matrix(beta,ncol = 1))
+
+mean(beta[ acc_beta == 1 ])
+
+mean(beta)
