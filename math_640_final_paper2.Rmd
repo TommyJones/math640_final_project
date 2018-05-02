@@ -295,8 +295,8 @@ We should put some posterior plots here, maybe
 
 ```{r}
 # Combine the results from the chains
-control_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$theta)),
-                       alpha = do.call(rbind, lapply(main_chains, function(x) x$alpha)))
+control_posterior <- list(theta = do.call(rbind, lapply(control_chains, function(x) x$theta)),
+                       alpha = do.call(rbind, lapply(control_chains, function(x) x$alpha)))
 
 main_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$theta)),
                        alpha = do.call(rbind, lapply(main_chains, function(x) x$alpha)),
