@@ -305,8 +305,7 @@ main_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$
 
 ```
 
-<<<<<<< HEAD
-=======
+
 ```{r}
 # calculate DIC for each model
 calc_dic <- function(y, theta_mat) {
@@ -340,8 +339,6 @@ control_p <- apply(control_posterior$theta, 1, function(x){
 
 ```
 
-
->>>>>>> eda5e9ef7e21112f444f9faeb2e61fd54d324c77
 
 # Results 
 
