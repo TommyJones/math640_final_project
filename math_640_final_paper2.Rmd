@@ -89,7 +89,8 @@ Of these conditional posteriors, only $\vec{\alpha}|\vec{\theta},\beta,\vec{y}$ 
 
 ### Description of data
 
-```{r}
+
+```{r, fig.align = 'center'}
 # load and prepare the data
 dtm <- CreateDtm(doc_vec = nih_sample$ABSTRACT_TEXT, # nih_sample from textmineR
                  doc_names = nih_sample$APPLICATION_ID,
@@ -109,7 +110,7 @@ hist(y, breaks = 50, col = rgb(1,0,0,0.5),
 ```
 
 Describe Zipf's law plot here
-```{r}
+```{r, fig.align='center'}
 # log-log plot of y
 f <- as.data.frame(table(y), stringsAsFactors = FALSE)
 
@@ -118,7 +119,6 @@ plot(log10(as.numeric(f$y)), log10(f$Freq), type = "l", lwd = 3,
      xlab = "log10(Number of Words)", ylab = "log10(Frequency)")
 
 ```
-
 
 ### Sampling the control model
 
@@ -285,7 +285,11 @@ main_alpha_conv <- sapply(main_chains, function(x){
 })
 
 main_beta_conv <- sapply(main_chains, function(x) x$geweke_beta)
+
+save.image('.RData')
 ```
+
+
 
 
 ##Comparison
@@ -314,7 +318,12 @@ main_beta_conv <- sapply(main_chains, function(x) x$geweke_beta)
     &= \left[\prod_k \theta_k^{y_k}\right] 
       \left[\mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}\right]\\
   P(\vec{\theta}|\vec{alpha}, \vec{y})
-    &\propto 
+    &\propto \prod_k \theta_k^{y_k+\alpha_k-1}
+    &\implies \vec{\theta}|\vec{\alpha},\vec{y} \sim Dir(\vec{y} + \vec{\alpha})\\
+  P(\vec{\alpha}|\vec{theta}, \vec{y})
+    &\propto \mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k}//
+  P(\alpha_k|\theta_k, y_k)
+    &\propto \theta_k^{\alpha_k}
 \end{align}
 
 ## Experimental Posterior Derivations
@@ -336,7 +345,7 @@ main_beta_conv <- sapply(main_chains, function(x) x$geweke_beta)
   P(\beta|\vec{\theta},\vec{\alpha},\vec{y})
     &\propto \beta^{K-1} \gamma^{\beta k}(\prod_k\alpha_k)^{-(\beta + 1)}\\
     &\propto \beta^{K-1} \gamma^{\beta k}(\prod_k\alpha_k)^{-\beta}\\
-    &\propto \beta^{K-1} \exp\Bigg[-\beta \bigg(\sum_k\log(\alpha_k)-k\log(\gamma)\bigg)\Bigg]\\
+    &\propto \beta^{K-1} \exp\Bigg[-\beta                                                        \bigg(\sum_k\log(\alpha_k)-k\log(\gamma)\bigg)\Bigg]\\
     &\implies \beta|\vec{\theta},\vec{\alpha},\vec{y} \sim Gamma\Big(k, \sum_k\log(\alpha_k)-k\log(\gamma)\Big)
 \end{align}
 
