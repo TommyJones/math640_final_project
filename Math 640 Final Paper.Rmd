@@ -229,7 +229,7 @@ main_chains <- list(list(seed = 1020,
 main_chains <- TmParallelApply(main_chains, function(x){
   # run sampler
   result <- main_sampler(y, B, seed = x$seed, theta0 = x$theta0, 
-                         alpha0 = x$alpha0, beta0 = x$beta0, gamma = 0.01)
+                         alpha0 = x$alpha0, beta0 = x$beta0)
   
   # remove 50% burn-in itertions and check convergence
   result$alpha <- result$alpha[(B/2):B,]
@@ -256,7 +256,14 @@ main_chains <- TmParallelApply(main_chains, function(x){
     out
   })
   
-  result$geweke_beta <- try(geweke.diag(result$beta)$z)
+  result$geweke_beta <- sapply(result$beta,function(k){
+    out <- try(geweke.diag(k)$z)
+    
+    if (class(out) == "try-error")
+      return(NA)
+    
+    out
+  })
 
 
   # thin every 10th interation
@@ -284,7 +291,7 @@ main_alpha_conv <- sapply(main_chains, function(x){
   mean(abs(x$geweke_alpha) >= 1.96 | is.na(x$geweke_alpha))
 })
 
-main_beta_conv <- sapply(main_chains, function(x) x$geweke_beta)
+main_beta_conv <- s
 ```
 
 
@@ -305,6 +312,17 @@ main_beta_conv <- sapply(main_chains, function(x) x$geweke_beta)
 # Appendix B
 
 ##Control Posterior Derivations
+
+\begin{align}
+  P(\vec{\theta},\vec{\alpha}|\vec{y}) 
+    &\propto \left[\prod_k \theta_k^{y_k}\right] 
+      \left[\mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}\right]
+      \times 1\\
+    &= \left[\prod_k \theta_k^{y_k}\right] 
+      \left[\mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}\right]\\
+  P(\vec{\theta}|\vec{alpha}, \vec{y})
+    &\propto 
+\end{align}
 
 ## Experimental Posterior Derivations
 
