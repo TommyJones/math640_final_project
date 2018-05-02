@@ -31,7 +31,7 @@ One method that researchers currently use to model text frequencies is with a Di
 
 Zipf's law is an empirical property of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. This means that the most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. (citations needed) Based on what Zipf's law dictates, this research tests the viability of placing a Pareto($\gamma$, $\beta$) prior on $\vec{\alpha}$, where $\gamma$ is fixed at a sufficiently small value. This Pareto distribution is a power-law that should provide some uncertainty on $\vec{\alpha}$ that mirrors this inherent property of language.  
 
-In order to determine whether this prior merits further research on more complex models, we will begin by modeling a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a pareto hyper-prior, with a non-informative Jeffrey's hyper-prior . We will compare this model to a control that does not allow for uncertainty on $\vec{\alpha}$. The data set is 100 randomly sampled NIH grant proposals from 2014.
+In order to determine whether this prior merits further research on more complex models, we will begin by modeling a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a pareto hyper-prior, with a non-informative Jeffrey's hyper-prior . We will compare this model to a control that does not allow for uncertainty on $\vec{\alpha}$. The data set is 100 randomly sampled NSF grant proposals from 2014.
 
 # Methods 
 
@@ -83,7 +83,7 @@ This prior is unrecognizable, so we will proceed by making a Gibbs sampler of th
     &\propto \beta^{K-1} \exp\Bigg[-\beta \bigg(\sum_k\log(\alpha_k)-k\log(\gamma)\bigg)\Bigg]\\
 \end{align}
 
-Of these conditional posteriors, only $\vec{\alpha}|\vec{\theta},\beta,\vec{y}$ is an unknown distribution. $\vec{\theta}|\vec{\alpha},\beta,\vec{y}$ is a $Dir(\vec{y}+\vec{\alpha})$, and $\beta|\vec{\theta},\vec{\alpha},\vec{y}$ is a Gamma$\bigg(k, \sum_k\log(\alpha_k)-k\log(\gamma)\bigg)$. The other two conditionals will be sampled from using a Metropolis-Hastings algorithm with (insert proposals).
+Of these conditional posteriors, only $\vec{\alpha}|\vec{\theta},\beta,\vec{y}$ is an unknown distribution. $\vec{\theta}|\vec{\alpha},\beta,\vec{y}$ is a $Dir(\vec{y}+\vec{\alpha})$, and $\beta|\vec{\theta},\vec{\alpha},\vec{y}$ is a Gamma$\bigg(k, \sum_k\log(\alpha_k)-k\log(\gamma)\bigg)$. The other two conditionals will be sampled using a Metropolis-Hastings algorithm with another exponential proposal.
 
 ##Sampling
 
@@ -363,11 +363,11 @@ control_p <- apply(control_posterior$theta, 1, function(x){
       \times 1\\
     &= \left[\prod_k \theta_k^{y_k}\right] 
       \left[\mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}\right]\\
-  P(\vec{\theta}|\vec{alpha}, \vec{y})
-    &\propto \prod_k \theta_k^{y_k+\alpha_k-1}
+  P(\vec{\theta}|\vec{\alpha}, \vec{y})
+    &\propto \prod_k \theta_k^{y_k+\alpha_k-1}\\
     &\implies \vec{\theta}|\vec{\alpha},\vec{y} \sim Dir(\vec{y} + \vec{\alpha})\\
-  P(\vec{\alpha}|\vec{theta}, \vec{y})
-    &\propto \mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k}//
+  P(\vec{\alpha}|\vec{\theta}, \vec{y})
+    &\propto \mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k}\\
   P(\alpha_k|\theta_k, y_k)
     &\propto \theta_k^{\alpha_k}
 \end{align}
