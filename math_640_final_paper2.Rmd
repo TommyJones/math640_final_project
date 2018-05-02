@@ -305,6 +305,47 @@ main_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$
 
 ```
 
+```{r}
+# calculate DIC for each model
+calc_dic <- function(y, theta_mat) {
+  
+  llik <- apply(theta_mat, 1, function(x) dmultinom(y, prob = x, log = TRUE))
+  
+  pdic <- 2 * var(llik)
+  
+  dic <- -2 * dmultinom(y, prob = colMeans(theta_mat)) + 2 * pdic
+  
+  dic
+  
+}
+
+main_dic <- calc_dic(y, main_posterior$theta)
+
+control_dic <- calc_dic(y, control_posterior$theta)
+
+```
+
+```{r}
+# calculate a distribution of bayes factors
+# note: main model is in the numerator
+
+B <- 20000
+
+bf <- numeric(B)
+
+set.seed(666)
+
+d <- nrow(main_posterior$theta)
+
+for (j in 1:B) {
+  bf[j] <- dmultinom(y, prob = main_posterior$theta[sample(seq_len(d),1),], log = T) - 
+                 dmultinom(y, prob = control_posterior$theta[sample(seq_len(d),1),], log = T)
+}
+
+
+```
+
+
 
 # Results 
 
