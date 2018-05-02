@@ -9,14 +9,18 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+```
 
+```{r, error=FALSE, message=FALSE, warning=FALSE}
 # load libraries
 library(textmineR)
 library(gtools)
 library(mcmcplots)
 library(EnvStats)
+library(coda)
 
 ```
+
 
 \newpage
 # Introduction
@@ -85,8 +89,7 @@ Of these conditional posteriors, only $\vec{\alpha}|\vec{\theta},\beta,\vec{y}$ 
 
 ### Description of data
 
-```{r, echo = FALSE}
-
+```{r}
 # load and prepare the data
 dtm <- CreateDtm(doc_vec = nih_sample$ABSTRACT_TEXT, # nih_sample from textmineR
                  doc_names = nih_sample$APPLICATION_ID,
@@ -98,6 +101,21 @@ y <- colSums(dtm) # nih_sample_dtm from the textmineR package
 
 y <- y[order(y, decreasing = TRUE)]
 
+# Histogram of y
+hist(y, breaks = 50, col = rgb(1,0,0,0.5), 
+     main = "Histogram of Word Counts",
+     ylab = "Frequency",
+     xlab = "Number of Words")
+```
+
+Describe Zipf's law plot here
+```{r}
+# log-log plot of y
+f <- as.data.frame(table(y), stringsAsFactors = FALSE)
+
+plot(log10(as.numeric(f$y)), log10(f$Freq), type = "l", lwd = 3,
+     main = "Log-log Plot of Histogram",
+     xlab = "log10(Number of Words)", ylab = "log10(Frequency)")
 
 ```
 
@@ -106,6 +124,76 @@ y <- y[order(y, decreasing = TRUE)]
 
 ```{r}
 # load the sampling function (to be copied here later)
+source("R/01_control_sampler.R")
+
+# run 4 chains of 20,000 iterations each
+
+B <- 20000
+
+control_chains <- list(list(seed = 1020, 
+                            theta0 = y / sum(y), 
+                            alpha0 = rep(0.01, length(y))),
+                       list(seed = 6, 
+                            theta0 = c(100, rep(1, length(y) - 1)) / 
+                              sum(c(100, rep(1, length(y) - 1))), 
+                            alpha0 = rep(0.1, length(y))),
+                       list(seed = 74901, 
+                            theta0 = rep(1/length(y), length(y)), 
+                            alpha0 = rep(0.5, length(y))),
+                       list(seed = 481, 
+                            theta0 = c(rep(100, 100), rep(10, length(y) - 100)) / 
+                               sum(c(rep(1, 100), rep(0, length(y) - 100))), 
+                            alpha0 = rep(0.9, length(y))))
+
+control_chains <- TmParallelApply(control_chains, function(x){
+  # run sampler
+  result <- control_sampler(y, B, seed = x$seed, theta0 = x$theta0, alpha0 = x$alpha0)
+  
+  # remove 50% burn-in itertions and check convergence
+  result$alpha <- result$alpha[(B/2):B,]
+  
+  result$theta <- result$theta[(B/2):B,]
+  
+  result$geweke_alpha <- apply(result$alpha,2,function(k){
+    out <- try(geweke.diag(k)$z)
+    
+    if (class(out) == "try-error")
+      return(NA)
+    
+    out
+  })
+  
+  result$geweke_theta <- apply(result$theta,2,function(k){
+    out <- try(geweke.diag(k)$z)
+    
+    if (class(out) == "try-error")
+      return(NA)
+    
+    out
+  })
+
+  # thin every 10th interation
+  result$alpha <- result$alpha[seq(10, nrow(result$alpha), by=10),]
+  
+  result$theta <- result$theta[seq(10, nrow(result$theta), by=10),]
+  
+  # return full result
+  result
+  
+}, cpus = 2, export = c("y", "B", "control_sampler"), 
+   libraries = c("gtools", "EnvStats", "coda"))
+
+# check acceptance rate
+control_alpha_acc <- sapply(control_chains, function(x) mean(x$acc_alpha))
+
+# check convergence with Geweke statistic
+control_theta_conv <- sapply(control_chains, function(x){
+  mean(abs(x$geweke_theta) >= 1.96 | is.na(x$geweke_theta))
+})
+
+control_alpha_conv <- sapply(control_chains, function(x){
+  mean(abs(x$geweke_alpha) >= 1.96 | is.na(x$geweke_alpha))
+})
 
 ```
 
@@ -113,7 +201,97 @@ y <- y[order(y, decreasing = TRUE)]
 
 ```{r}
 # load the sampling function (to be copied here later)
+source("R/01_main_sampler.R")
 
+# run 4 chains of 20,000 iterations each
+
+B <- 20000
+
+main_chains <- list(list(seed = 1020, 
+                         theta0 = y / sum(y), 
+                         alpha0 = rep(0.01, length(y)),
+                         beta0 = 2),
+                    list(seed = 6, 
+                         theta0 = c(100, rep(1, length(y) - 1)) / 
+                           sum(c(100, rep(1, length(y) - 1))), 
+                         alpha0 = rep(0.1, length(y)),
+                         beta0 = 1),
+                    list(seed = 74901, 
+                         theta0 = rep(1/length(y), length(y)), 
+                         alpha0 = rep(0.5, length(y)),
+                         beta0 = 0.01),
+                    list(seed = 481, 
+                         theta0 = c(rep(100, 100), rep(10, length(y) - 100)) / 
+                           sum(c(rep(1, 100), rep(0, length(y) - 100))), 
+                         alpha0 = rep(0.9, length(y)),
+                         beta0 = 0.5))
+
+main_chains <- TmParallelApply(main_chains, function(x){
+  # run sampler
+  result <- main_sampler(y, B, seed = x$seed, theta0 = x$theta0, 
+                         alpha0 = x$alpha0, beta0 = x$beta0)
+  
+  # remove 50% burn-in itertions and check convergence
+  result$alpha <- result$alpha[(B/2):B,]
+  
+  result$theta <- result$theta[(B/2):B,]
+  
+  result$beta <- result$beta[(B/2):B]
+  
+  result$geweke_alpha <- apply(result$alpha,2,function(k){
+    out <- try(geweke.diag(k)$z)
+    
+    if (class(out) == "try-error")
+      return(NA)
+    
+    out
+  })
+  
+  result$geweke_theta <- apply(result$theta,2,function(k){
+    out <- try(geweke.diag(k)$z)
+    
+    if (class(out) == "try-error")
+      return(NA)
+    
+    out
+  })
+  
+  result$geweke_beta <- sapply(result$beta,function(k){
+    out <- try(geweke.diag(k)$z)
+    
+    if (class(out) == "try-error")
+      return(NA)
+    
+    out
+  })
+
+
+  # thin every 10th interation
+  result$alpha <- result$alpha[seq(10, nrow(result$alpha), by=10),]
+  
+  result$theta <- result$theta[seq(10, nrow(result$theta), by=10),]
+  
+  result$beta <- result$beta[seq(10, length(result$beta), 10)]
+  
+  # return full result
+  result
+  
+}, cpus = 2, export = c("y", "B", "main_sampler"), 
+   libraries = c("gtools", "EnvStats", "coda"))
+
+# check acceptance rate
+main_alpha_acc <- sapply(main_chains, function(x) mean(x$acc_alpha))
+
+# check convergence with Geweke statistic
+main_theta_conv <- sapply(main_chains, function(x){
+  mean(abs(x$geweke_theta) >= 1.96 | is.na(x$geweke_theta))
+})
+
+main_alpha_conv <- sapply(main_chains, function(x){
+  mean(abs(x$geweke_alpha) >= 1.96 | is.na(x$geweke_alpha))
+})
+
+main_beta_conv <- s
 ```
 
 
