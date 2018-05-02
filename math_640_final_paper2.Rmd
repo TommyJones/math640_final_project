@@ -305,6 +305,43 @@ main_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$
 
 ```
 
+<<<<<<< HEAD
+=======
+```{r}
+# calculate DIC for each model
+calc_dic <- function(y, theta_mat) {
+  
+  llik <- apply(theta_mat, 1, function(x) dmultinom(y, prob = x, log = TRUE))
+  
+  pdic <- 2 * var(llik)
+  
+  dic <- -2 * dmultinom(y, prob = colMeans(theta_mat)) + 2 * pdic
+  
+  dic
+  
+}
+
+main_dic <- calc_dic(y, main_posterior$theta)
+
+control_dic <- calc_dic(y, control_posterior$theta)
+
+```
+
+```{r}
+# calculate a distribution of log liklihoods under the model
+main_p <- apply(main_posterior$theta, 1, function(x){
+  dmultinom(y, prob = x, log = TRUE)
+})
+
+control_p <- apply(control_posterior$theta, 1, function(x){
+  dmultinom(y, prob = x, log = TRUE)
+})
+
+
+```
+
+
+>>>>>>> eda5e9ef7e21112f444f9faeb2e61fd54d324c77
 
 # Results 
 
