@@ -75,7 +75,7 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
   }
   
   # return the result
-  list(theta = theta, alpha = alpha, acc_alpha = alpha, seed = seed, 
+  list(theta = theta, alpha = alpha, acc_alpha = acc_alpha, seed = seed, 
        theta0 = theta0, alpha0 = alpha0)
 }
 

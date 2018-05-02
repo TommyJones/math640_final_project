@@ -28,7 +28,7 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
     alpha_k ^ (-beta - 1) * theta_k ^ alpha_k
   }
   
-  j_alpha <- function(prob = FALSE, n = NULL, x = NULL, rate = 1) {
+  j_alpha <- function(prob = FALSE, n = NULL, x = NULL, rate = 10) {
     # if prob is false, draw a sample, otherwise find p(x)
     if (! prob) {
       out <- rexp(n = n, rate = rate)
@@ -88,7 +88,7 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
   }
   
   # return the result
-  list(theta = theta, alpha = alpha, acc_alpha = alpha, beta = beta,
+  list(theta = theta, alpha = alpha, acc_alpha = acc_alpha, beta = beta,
        seed = seed, theta0 = theta0, alpha0 = alpha0)
   
 }
