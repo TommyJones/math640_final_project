@@ -288,7 +288,23 @@ main_beta_conv <- sapply(main_chains, function(x) x$geweke_beta)
 ```
 
 
+
 ##Comparison
+
+We should put some posterior plots here, maybe
+
+```{r}
+# Combine the results from the chains
+control_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$theta)),
+                       alpha = do.call(rbind, lapply(main_chains, function(x) x$alpha)))
+
+main_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$theta)),
+                       alpha = do.call(rbind, lapply(main_chains, function(x) x$alpha)),
+                       beta = do.call(c, lapply(main_chains, function(x) x$beta)))
+
+
+```
+
 
 # Results 
 
