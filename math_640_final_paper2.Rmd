@@ -326,21 +326,14 @@ control_dic <- calc_dic(y, control_posterior$theta)
 ```
 
 ```{r}
-# calculate a distribution of bayes factors
-# note: main model is in the numerator
+# calculate a distribution of log liklihoods under the model
+main_p <- apply(main_posterior$theta, 1, function(x){
+  dmultinom(y, prob = x, log = TRUE)
+})
 
-B <- 20000
-
-bf <- numeric(B)
-
-set.seed(666)
-
-d <- nrow(main_posterior$theta)
-
-for (j in 1:B) {
-  bf[j] <- dmultinom(y, prob = main_posterior$theta[sample(seq_len(d),1),], log = T) - 
-                 dmultinom(y, prob = control_posterior$theta[sample(seq_len(d),1),], log = T)
-}
+control_p <- apply(control_posterior$theta, 1, function(x){
+  dmultinom(y, prob = x, log = TRUE)
+})
 
 
 ```
