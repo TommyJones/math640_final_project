@@ -58,9 +58,26 @@ J_alpha_a <- function(x, beta, theta, log = TRUE) {
   out
 }
 
+# these functions are just for a single alpha_k
+f_alpha_k <- function(alpha_k, theta_k, beta) {
+  alpha_k ^ (-beta - 1) * theta_k ^ alpha_k
+}
+
+j_alpha <- function(prob = FALSE, n = NULL, x = NULL, rate = 5) {
+  # if prob is false, draw a sample, otherwise find p(x)
+  if (! prob) {
+    out <- rexp(n = n, rate = rate)
+  } else {
+    out <- dexp(x, rate)
+  }
+  
+  out
+}
+
+
 
 # set up sampler
-B <- 500
+B <- 20000
 
 theta <- matrix(0, nrow = B, ncol = k)
 
@@ -87,31 +104,29 @@ for (j in 2:B) {
   theta[j,] <- rdirichlet(1, y + alpha[j-1,])
   
   # sample beta
-  beta[j] <- rgamma(1, k + a, sum(log(alpha[j-1] - k * log(g))) + b)
+  beta[j] <- rgamma(1, k + a, sum(log(alpha[j-1,]) - k * log(g)) + b)
   
   # sample alpha
-  alpha_star <- J_alpha(beta = beta[j-1], theta = theta[j-1,])
+  alpha_star <- j_alpha(n = k)
   
-  r1 <- (f_alpha(alpha_star, theta[j-1,], beta[j-1]) - 
-           f_alpha(alpha[j-1,], theta[j-1,], beta[j-1])) - 
-    (J_alpha_a(alpha_star, beta[j-1], theta[j-1,]) - 
-       J_alpha_a(alpha[j-1,], beta[j-1], theta[j-1,]))
-  
-  # r1 <- exp(r1)
+  r <- (f_alpha_k(alpha_k = alpha_star, theta_k = theta[j-1,], beta = beta[j-1]) / 
+          f_alpha_k(alpha[j-1,],theta[j-1,],beta[j-1])) /
+    (j_alpha(prob = TRUE, x = alpha_star) / j_alpha(prob = TRUE, x = alpha[j-1,]))
   
   u <- runif(1)
   
-  if (log(u) < min(r1, 0)) {
-    alpha[j,] <- alpha_star
-    acc_alpha[j] <- 1
-  } else {
-    alpha[j,] <- alpha[j-1,]
-  }
+  keep <- pmin(r,1) > u
+  
+  alpha[j,keep] <- alpha_star[keep]
+  
+  alpha[j,!keep] <- alpha[j-1,!keep]
+  
+  acc_alpha[j] <- sum(keep) / k
   
 }
 
 mean(acc_alpha)
 
-sum(acc_alpha)
+
 
 
