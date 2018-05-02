@@ -7,7 +7,7 @@ library(textmineR)
 library(gtools)
 library(mcmcplots)
 library(EnvStats)
-
+library(statmod)
 
 ### set up sampler ----
 
@@ -19,12 +19,16 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
     theta_k ^ alpha_k
   }
   
-  j_alpha <- function(prob = FALSE, n = NULL, x = NULL, rate = 2) {
+  j_alpha <- function(mu = 0.1, prob = FALSE, n = NULL, x = NULL, rate = 0.01) {
     # if prob is false, draw a sample, otherwise find p(x)
     if (! prob) {
-      out <- rexp(n = n, rate = rate)
+      # out <- rexp(n = n, rate = rate)
+      out <- rinvgauss(n = n, mean = mu, shape = rate)
+      # out <- rpareto(n = n, location = mu, shape = rate)
     } else {
-      out <- dexp(x, rate)
+      # out <- dexp(x, rate)
+      out <- dinvgauss(x, mean = mu, shape = rate)
+      # out <- dpareto(x, location = mu, shape = rate)
     }
     
     out
@@ -41,7 +45,7 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
   
   alpha[1,] <- alpha0
   
-  acc_alpha <- numeric(B)
+  acc_alpha <- numeric(ncol(alpha))
   
   # run the sampler
   for (j in 2:B) {
@@ -51,8 +55,10 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
     # sample alpha
     alpha_star <- j_alpha(n = k)
     
-    r <- (f_alpha_k(alpha_k = alpha_star, theta_k = theta[j-1,]) / f_alpha_k(alpha[j-1,],theta[j-1,])) /
-      (j_alpha(prob = TRUE, x = alpha_star) / j_alpha(prob = TRUE, x = alpha[j-1,]))
+    r <- (f_alpha_k(alpha_k = alpha_star, theta_k = theta[j-1,]) / 
+            f_alpha_k(alpha[j-1,],theta[j-1,])) /
+      (j_alpha(prob = TRUE, x = alpha_star) / 
+         j_alpha(prob = TRUE, x = alpha[j-1,]))
     
     u <- runif(1)
     
@@ -62,9 +68,13 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
     
     alpha[j,!keep] <- alpha[j-1,!keep]
     
-    acc_alpha[j] <- sum(keep) / k
+    # acc_alpha[j] <- sum(keep) / k
+    
+    acc_alpha <- acc_alpha + keep
     
   }
+  
+  acc_alpha <- acc_alpha / B
   
   # return the result
   list(theta = theta, alpha = alpha, acc_alpha = acc_alpha, seed = seed, 
@@ -83,15 +93,17 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
 # y <- y[ 1:k ]
 # B <- 10000
 # 
-# result <- control_sampler(y = y, B = B, seed = 90210, 
+# result <- control_sampler(y = y, B = B, seed = 90210,
 #                           theta0 = y / sum(y), alpha0 = rep(0.1,length(y)))
 # 
 # # acceptance rate
 # mean(result$acc_alpha)
 # 
+# summary(result$acc_alpha)
+# 
 # # geweke diagnostic
 # g <- apply(result$alpha, 2, function(x) geweke.diag(x[ (B/4):B ])$z)
 # 
 # # by random chance, expect 5% to be greater than 1.96
-# mean(g >= 1.96)
+# mean(abs(g) >= 1.96 | is.na(g))
 
