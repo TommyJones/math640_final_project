@@ -9,7 +9,9 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+```
 
+```{r}
 # load libraries
 library(textmineR)
 library(gtools)
@@ -17,6 +19,7 @@ library(mcmcplots)
 library(EnvStats)
 
 ```
+
 
 \newpage
 # Introduction
