@@ -31,6 +31,8 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
   }
   
   # set up sampler
+  k <- length(y)
+  
   theta <- matrix(0, nrow = B, ncol = k)
   
   theta[ 1, ] <- theta0
