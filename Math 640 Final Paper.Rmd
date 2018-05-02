@@ -23,6 +23,10 @@ In order to determine whether this prior merits further research on more complex
 
 # Methods 
 
+## Data 
+
+The data used in this analysis was 
+
 ## Models
 
 For both the control and the new model, we assume that the word count $y$ is iid multinomial, so has the following likelihood. (Is there a reason we aren't using vector notation here)
