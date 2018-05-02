@@ -7,6 +7,7 @@ library(textmineR)
 library(gtools)
 library(mcmcplots)
 library(EnvStats)
+library(statmod)
 
 ### set up sampler ----
 
@@ -19,12 +20,16 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
     alpha_k ^ (-beta - 1) * theta_k ^ alpha_k
   }
   
-  j_alpha <- function(prob = FALSE, n = NULL, x = NULL, rate = 10) {
+  j_alpha <- function(mu = 0.1, prob = FALSE, n = NULL, x = NULL, rate = 0.01) {
     # if prob is false, draw a sample, otherwise find p(x)
     if (! prob) {
-      out <- rexp(n = n, rate = rate)
+      # out <- rexp(n = n, rate = rate)
+      out <- rinvgauss(n = n, mean = mu, shape = rate)
+      # out <- rpareto(n = n, location = mu, shape = rate)
     } else {
-      out <- dexp(x, rate)
+      # out <- dexp(x, rate)
+      out <- dinvgauss(x, mean = mu, shape = rate)
+      # out <- dpareto(x, location = mu, shape = rate)
     }
     
     out
@@ -41,7 +46,7 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
   
   alpha[ 1, ] <- alpha0
   
-  acc_alpha <- numeric(B)
+  acc_alpha <- numeric(ncol(alpha))
   
   beta <- numeric(B)
   
@@ -76,9 +81,13 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
     
     alpha[j,!keep] <- alpha[j-1,!keep]
     
-    acc_alpha[j] <- sum(keep) / k
+    # acc_alpha[j] <- sum(keep) / k
+    
+    acc_alpha <- acc_alpha + keep
     
   }
+  
+  acc_alpha <- acc_alpha / B
   
   # return the result
   list(theta = theta, alpha = alpha, acc_alpha = acc_alpha, beta = beta,
@@ -100,18 +109,20 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
 # # run sampler
 # B <- 10000
 # 
-# result <- main_sampler(y = y, B = B, seed = 8675309, 
+# result <- main_sampler(y = y, B = B, seed = 8675309,
 #                        theta0 = y / sum(y), alpha0 = rep(0.1,length(y)),
 #                        beta0 = 2, gamma = 0.01)
 # 
 # # acceptance rate
 # mean(result$acc_alpha)
 # 
+# summary(result$acc_alpha)
+# 
 # # geweke diagnostic
 # g <- apply(result$alpha, 2, function(x) geweke.diag(x[ (B/4):B ])$z)
 # 
 # # by random chance, expect 5% to be greater than 1.96
-# mean(g >= 1.96, na.rm = T)
+# mean(abs(g) >= 1.96 | is.na(g))
 # 
 # sum(is.na(g))
 
