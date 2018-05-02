@@ -31,9 +31,6 @@ In order to determine whether this prior merits further research on more complex
 
 # Methods 
 
-## Data 
-
-The data used in this analysis was 
 
 ## Models
 
