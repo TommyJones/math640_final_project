@@ -256,14 +256,7 @@ main_chains <- TmParallelApply(main_chains, function(x){
     out
   })
   
-  result$geweke_beta <- sapply(result$beta,function(k){
-    out <- try(geweke.diag(k)$z)
-    
-    if (class(out) == "try-error")
-      return(NA)
-    
-    out
-  })
+  result$geweke_beta <- try(geweke.diag(result$beta)$z)
 
 
   # thin every 10th interation
@@ -291,7 +284,7 @@ main_alpha_conv <- sapply(main_chains, function(x){
   mean(abs(x$geweke_alpha) >= 1.96 | is.na(x$geweke_alpha))
 })
 
-main_beta_conv <- s
+main_beta_conv <- sapply(main_chains, function(x) x$geweke_beta)
 ```
 
 
