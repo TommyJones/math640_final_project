@@ -1,5 +1,5 @@
 ################################################################################
-# This script runs the main model (to be copied to "Math 640 Final Paper.Rmd")
+# This script runs the main model (to be called from "Math 640 Final Paper.Rmd")
 ################################################################################
 
 ### load libraries ----
@@ -7,15 +7,6 @@ library(textmineR)
 library(gtools)
 library(mcmcplots)
 library(EnvStats)
-
-### Load data and create data-related variables/constants ----
-y <- colSums(nih_sample_dtm) # nih_sample_dtm from the textmineR package
-
-y <- y[ order(y, decreasing = TRUE) ]
-
-k <- length(y) # 20
-
-y <- y[ 1:k ]
 
 ### set up sampler ----
 
@@ -94,20 +85,31 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
 }
 
 ### test to see if it works ----
-B <- 10000
 
-result <- main_sampler(y = y, B = B, seed = 8675309, 
-                       theta0 = y / sum(y), alpha0 = rep(0.1,length(y)),
-                       beta0 = 2, gamma = 0.01)
-
-# acceptance rate
-mean(result$acc_alpha)
-
-# geweke diagnostic
-g <- apply(result$alpha, 2, function(x) geweke.diag(x[ (B/4):B ])$z)
-
-# by random chance, expect 5% to be greater than 1.96
-mean(g >= 1.96, na.rm = T)
-
-sum(is.na(g))
+# # Load data and create data-related variables/constants
+# y <- colSums(nih_sample_dtm) # nih_sample_dtm from the textmineR package
+# 
+# y <- y[ order(y, decreasing = TRUE) ]
+# 
+# k <- length(y) # 20
+# 
+# y <- y[ 1:k ]
+# 
+# # run sampler
+# B <- 10000
+# 
+# result <- main_sampler(y = y, B = B, seed = 8675309, 
+#                        theta0 = y / sum(y), alpha0 = rep(0.1,length(y)),
+#                        beta0 = 2, gamma = 0.01)
+# 
+# # acceptance rate
+# mean(result$acc_alpha)
+# 
+# # geweke diagnostic
+# g <- apply(result$alpha, 2, function(x) geweke.diag(x[ (B/4):B ])$z)
+# 
+# # by random chance, expect 5% to be greater than 1.96
+# mean(g >= 1.96, na.rm = T)
+# 
+# sum(is.na(g))
 
