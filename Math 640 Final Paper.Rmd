@@ -1,7 +1,7 @@
 ---
 title: "Math 640 Final Paper"
 author: "Max Kearns and Tommy Jones"
-date: "May 10, 2018"
+date:   "May 10, 2018"
 output:
   pdf_document:
     number_sections: true
@@ -27,30 +27,36 @@ library(coda)
 
 The analysis of text data is an area of vital research in both frequentist and Bayesian statistics. Text can, and indeed does, store a vast amount of information that is not easily evaluated with well-understood statistical methods. While text analysis is used throughout our economy, it does not have nearly as much research and knowledge behind it as does numerical data. This paper attempts to slightly further the bank of techniques for text analysis, in the hopes that text data will someday be as understood as numerical data is today. 
 
-One method that researchers currently use to model text frequencies is with a Dirichlet prior on a multinomial likelihood. The prior provides uncertainty on $\theta$, which is the vector of word probabilities. The usual model then fixes the Dirichlet parameter ($\alpha$). In a Bayesian setting, however, this approach seems overly simplistic, and MCMC methods provide a simple solution to sample from a more complex distribution. This research intends to start to answer the question as to whether more uncertainty on $\alpha$ would improve the model. Zipf's law provides a basis for how to vary $\alpha$ in a way that is consistent with knowledge about human language. 
+One method that researchers currently use to model text frequencies is with a Dirichlet prior on a multinomial likelihood. The prior provides uncertainty on $\vec{\theta}$, which is the vector of word probabilities. The usual model then assumes a non-informative uniform prior on the Dirichlet parameter ($\vec{\alpha}$). In a Bayesian setting, however, this approach seems overly simplistic, and MCMC methods provide a simple solution to sample from a more complex distribution. This research intends to start to answer the question as to whether more uncertainty on $\vec{\alpha}$ would improve the model. Zipf's law provides a basis for how to vary $\vec{\alpha}$ in a way that is consistent with knowledge about human language. 
 
-Zipf's law is an empirical property of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. This means that the most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. (citations needed) Based on what Zipf's law dictates, this research tests the viability of placing a Pareto($\gamma$, $\beta$) prior on $\alpha$, where $\gamma$ is fixed at a sufficiently small value. This Pareto distribution is a power-law that should provide some uncertainty on $\alpha$ that mirrors this inherent property of language.  
+Zipf's law is an empirical property of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. This means that the most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. (citations needed) Based on what Zipf's law dictates, this research tests the viability of placing a Pareto($\gamma$, $\beta$) prior on $\vec{\alpha}$, where $\gamma$ is fixed at a sufficiently small value. This Pareto distribution is a power-law that should provide some uncertainty on $\vec{\alpha}$ that mirrors this inherent property of language.  
 
-In order to determine whether this prior merits further research on more complex models, we will begin by modeling a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a pareto hyper-prior, with a non-informative Jeffrey's hyper-prior . We will compare this model to a control that does not allow for uncertainty on $\alpha$ The data set is 100 randomly sampled NIH grant proposals from 2014.
+In order to determine whether this prior merits further research on more complex models, we will begin by modeling a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a pareto hyper-prior, with a non-informative Jeffrey's hyper-prior . We will compare this model to a control that does not allow for uncertainty on $\vec{\alpha}$. The data set is 100 randomly sampled NIH grant proposals from 2014.
 
 # Methods 
 
 
 ## Models
 
-For both the control and the new model, we assume that the word count $y$ is iid multinomial, so has the following likelihood. (Is there a reason we aren't using vector notation here)
+For both the control and the experimental model, we assume that the word count $\vec{y}$ is multinomial, so has the following likelihood.
 
 \begin{align}
-y \sim multinom(n,\theta) \implies \mathcal{L}(y|\theta,\alpha,\beta) \propto \prod_k \theta_k^{y_k}
+\vec{y} \sim multinom(n,\vec{\theta}) \implies \mathcal{L}(\vec{y}|\vec{\theta},\vec{\alpha},\beta) \propto \prod_k \theta_k^{y_k}
 \end{align}
 
-On $\theta$, the vector of word probabilities, we place a Dirichlet prior.
+On $\vec{\theta}$, the vector of word probabilities, we place a Dirichlet prior.
 
 \begin{align}
-\theta \sim Dir(\vec{\alpha}) \implies \pi(\theta) = \mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}
+\vec{\theta} \sim Dir(\vec{\alpha}) \implies \pi(\vec{\theta}) = \mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}
 \end{align}
 
-The control model will stop here, and assume (insert discussion of chosen alpha here). The control model then has the simple form $\theta|y \sim Dir(\vec{y}+\vec{\alpha})$  The candidate model, however, will assume a $Pareto(1, \beta$) prior on $\alpha$, with Jeffrey's prior on $\beta$.
+The control model will stop here, and assume a uniform distibution on $\alpha_k$. The control model then has the simple form $\vec{\theta}|\vec{y}, \vec{\alpha} \sim Dir(\vec{y}+\vec{\alpha})$, and an unknown distribution for $\vec{\alpha}|\vec{y}, \vec{\beta}$; shown below (the full derivation can be found in Appendix B). We will sample from $\vec{\alpha}|\vec{y}, \vec{\beta}$ with an exponential proposal. 
+
+\begin{align}
+p(\alpha_k|\theta_k, y_k)\propto \theta_k^{\alpha_k}
+\end{align}
+
+The candidate model, however, will assume a $Pareto(\gamma, \beta$) prior on $\alpha_k$, with Jeffrey's prior on $\beta$.
 
 \begin{align}
 \alpha_k \sim Pareto(\gamma, \beta) \implies \pi(\vec{\alpha}) &= \prod_k \gamma^\beta\beta\alpha_k^{-(\beta + 1)}\\
@@ -60,24 +66,24 @@ The control model will stop here, and assume (insert discussion of chosen alpha 
 This results in the unknown posterior below, and a full derivation of the model can be found in Appendix B. 
 
 \begin{align}
-  P(\theta,\alpha,\beta|y) 
+  P(\vec{\theta},\vec{\alpha},\beta|\vec{y}) 
     &\propto\beta^{(K-1)}\gamma^{k\beta}\mathcal{B}(\vec{\alpha})
       \prod_k\theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}
 \end{align}
 
-This prior is unrecognizable, so we will proceed be making a Gibbs sampler of the full posteriors, which can be found below. 
+This prior is unrecognizable, so we will proceed by making a Gibbs sampler of the full conditional posteriors, which can be found below. 
 
 \begin{align}
-  P(\theta|\alpha,\beta,y)
+  P(\vec{\theta}|\vec{\alpha},\beta,\vec{y})
     &\propto \prod_k \theta_k^{y_k+\alpha_k - 1}\\
-  P(\alpha|\theta,\beta,y) 
+  P(\vec{\alpha}|\vec{\theta},\beta,\vec{y}) 
     &\propto \mathcal{B}(\vec{\alpha})
       \prod_k \theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
-  P(\beta|\theta,\alpha,y)
+  P(\beta|\vec{\theta},\vec{\alpha},\vec{y})
     &\propto \beta^{K-1} \exp\Bigg[-\beta \bigg(\sum_k\log(\alpha_k)-k\log(\gamma)\bigg)\Bigg]\\
 \end{align}
 
-Of these conditional posteriors, only $\alpha|\theta,\beta,y$ is an unknown distribution. $\theta|\alpha,\beta,y$ is a $Dir(\vec{y}+\vec{\alpha})$, and $\beta|\theta,\alpha,y$ is a Gamma$\bigg(k, \sum_k\log(\alpha_k)-k\log(\gamma)\bigg)$. The other two conditionals will be sampled from using a Metropolis-Hastings algorithm with (insert proposals).
+Of these conditional posteriors, only $\vec{\alpha}|\vec{\theta},\beta,\vec{y}$ is an unknown distribution. $\vec{\theta}|\vec{\alpha},\beta,\vec{y}$ is a $Dir(\vec{y}+\vec{\alpha})$, and $\beta|\vec{\theta},\vec{\alpha},\vec{y}$ is a Gamma$\bigg(k, \sum_k\log(\alpha_k)-k\log(\gamma)\bigg)$. The other two conditionals will be sampled from using a Metropolis-Hastings algorithm with (insert proposals).
 
 ##Sampling
 
@@ -93,7 +99,7 @@ dtm <- CreateDtm(doc_vec = nih_sample$ABSTRACT_TEXT, # nih_sample from textmineR
 
 y <- colSums(dtm) # nih_sample_dtm from the textmineR package
 
-y <- y[ order(y, decreasing = TRUE) ]
+y <- y[order(y, decreasing = TRUE)]
 
 # Histogram of y
 hist(y, breaks = 50, col = rgb(1,0,0,0.5), 
@@ -298,27 +304,29 @@ main_beta_conv <- sapply(main_chains, function(x) x$geweke_beta)
 
 # Appendix B
 
-## Posterior Derivations
+##Control Posterior Derivations
+
+## Experimental Posterior Derivations
 
 \begin{align}
-  P(\theta,\alpha,\beta|y) 
+  P(\vec{\theta},\vec{\alpha},\beta|\vec{y}) 
     &\propto \left[\prod_k \theta_k^{y_k}\right] 
       \left[\mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}\right]
       \left[\prod_k \gamma^\beta\beta\alpha_k^{-(\beta + 1)}\right]\\
     &= \beta^{K-1}\gamma^{\beta k}\mathcal{B}(\vec{\alpha})
       \prod_k\theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
-  P(\theta|\alpha,\beta,y)
+  P(\vec{\theta}|\vec{\alpha},\beta,\vec{y})
     &\propto \prod_k \theta_k^{y_k+\alpha_k - 1}\\
-    &\implies \theta|\alpha,\beta,y \sim Dir(\vec{y} + \vec{\alpha})\\
-  P(\alpha|\theta,\beta,y) 
+    &\implies \vec{\theta}|\vec{\alpha},\beta,y \sim Dir(\vec{y} + \vec{\alpha})\\
+  P(\vec{\alpha}|\vec{\theta},\beta,\vec{y}) 
     &\propto \mathcal{B}(\vec{\alpha})
       \prod_k \theta_k^{y_k+\alpha_k - 1}\alpha_k^{-(\beta + 1)}\\
     &\implies \text{unknown distribution}\\
-  P(\beta|\theta,\alpha,y)
+  P(\beta|\vec{\theta},\vec{\alpha},\vec{y})
     &\propto \beta^{K-1} \gamma^{\beta k}(\prod_k\alpha_k)^{-(\beta + 1)}\\
     &\propto \beta^{K-1} \gamma^{\beta k}(\prod_k\alpha_k)^{-\beta}\\
     &\propto \beta^{K-1} \exp\Bigg[-\beta \bigg(\sum_k\log(\alpha_k)-k\log(\gamma)\bigg)\Bigg]\\
-    &\implies \beta|\theta,\alpha,y \sim Gamma\Big(k, \sum_k\log(\alpha_k)-k\log(\gamma)\Big)
+    &\implies \beta|\vec{\theta},\vec{\alpha},\vec{y} \sim Gamma\Big(k, \sum_k\log(\alpha_k)-k\log(\gamma)\Big)
 \end{align}
 
 ##Jeffrey's prior on $\beta$
