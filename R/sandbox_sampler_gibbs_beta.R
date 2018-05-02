@@ -63,7 +63,7 @@ f_alpha_k <- function(alpha_k, theta_k, beta) {
   alpha_k ^ (-beta - 1) * theta_k ^ alpha_k
 }
 
-j_alpha <- function(prob = FALSE, n = NULL, x = NULL, rate = 5) {
+j_alpha <- function(prob = FALSE, n = NULL, x = NULL, rate = 2) {
   # if prob is false, draw a sample, otherwise find p(x)
   if (! prob) {
     out <- rexp(n = n, rate = rate)
