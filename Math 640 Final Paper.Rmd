@@ -8,8 +8,16 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+
+# load libraries
+library(textmineR)
+library(gtools)
+library(mcmcplots)
+library(EnvStats)
+
 ```
+
 \newpage
 # Introduction
 
@@ -72,6 +80,38 @@ Of these conditional posteriors, only $\alpha|\theta,\beta,y$ is an unknown dist
 
 ##Sampling
 
+### Description of data
+
+```{r, echo = FALSE}
+
+# load and prepare the data
+dtm <- CreateDtm(doc_vec = nih_sample$ABSTRACT_TEXT, # nih_sample from textmineR
+                 doc_names = nih_sample$APPLICATION_ID,
+                 ngram_window = c(1,1),
+                 stopword_vec = c(),
+                 verbose = FALSE)
+
+y <- colSums(dtm) # nih_sample_dtm from the textmineR package
+
+y <- y[ order(y, decreasing = TRUE) ]
+
+
+```
+
+
+### Sampling the control model
+
+```{r}
+# load the sampling function (to be copied here later)
+
+```
+
+### Sampling the main model
+
+```{r}
+# load the sampling function (to be copied here later)
+
+```
 
 
 ##Comparison
