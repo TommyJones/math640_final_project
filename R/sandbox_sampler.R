@@ -54,9 +54,14 @@ f_beta <- function(beta, alpha, log = TRUE) {
 curve(f_beta(beta = x, alpha = rep(0.01, k)), from = 0, to = 1000)
 
 # delcare sampling functions for alpha and beta
-J_alpha <- function(beta, k) {
+J_alpha <- function(beta, alpha) {
+  k <- length(alpha)
   
-  EnvStats::rpareto(n = k, location = 1, s = beta)
+  out <- EnvStats::rpareto(n = k, location = 1, s = beta)
+  
+  # out <- out[ order(alpha) ]  
+  
+  out
   
 }
 
