@@ -372,7 +372,7 @@ control_p <- apply(control_posterior$theta, 1, function(x){
     &\propto \theta_k^{\alpha_k}
 \end{align}
 
-## Experimental Posterior Derivations
+## Main Posterior Derivations
 
 \begin{align}
   P(\vec{\theta},\vec{\alpha},\beta|\vec{y}) 
@@ -406,10 +406,6 @@ p(\beta)&\propto\beta^k (\prod_k\alpha_k)^{-(\beta + 1)}\\
 -E\Big[\frac{\partial^2}{\partial\beta^2}\log\big(p(\beta)\big)\Big]&\propto \frac{k}{\beta^2}\\
 \pi(\beta)&\propto \frac{1}{\beta}
 \end{align}
-
-
-
-
 
 
 
