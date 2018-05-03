@@ -7,6 +7,15 @@ library(coda)
 
 load(".RData")
 
+# combine posteriors
+control_posterior <- list(theta = do.call(rbind, lapply(control_chains, function(x) x$theta)),
+                          alpha = do.call(rbind, lapply(control_chains, function(x) x$alpha)))
+
+main_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$theta)),
+                       alpha = do.call(rbind, lapply(main_chains, function(x) x$alpha)),
+                       beta = do.call(c, lapply(main_chains, function(x) x$beta)))
+
+
 # check acceptance rates
 main_alpha_acc <- sapply(main_chains, function(x) x$acc_alpha)
 
@@ -29,12 +38,6 @@ rownames(alpha_acc_table) <- c("min.", "25%", "50%", "75%", "max.")
 knitr::kable(alpha_acc_table, digits = 2)
 
 # check convergence
-main_beta_conv
-main_alpha_conv
-control_alpha_conv
-main_theta_conv
-control_theta_conv
-
 conv_table <- data.frame(main_theta_conv, main_alpha_conv,
                          control_theta_conv, control_alpha_conv,
                          stringsAsFactors = FALSE)
@@ -115,3 +118,37 @@ control_dic <- calc_dic(y, control_posterior$theta)
 
 barplot(c(Main = main_dic, Control = control_dic), col = c("red", "blue"),
         density = c(-1,25))
+
+# log-log plots of alpha and theta vs. y
+
+# alpha
+plot(log10(seq_along(y)), log10(y), 
+     lwd = 3, yaxt = "n", ylab = "log10(x)", xlab = "rank(x)", type = "l",
+     lty = 3, main = expression(paste("Comparing ", alpha)))
+par(new = TRUE)
+plot(log10(seq_along(y)), log10(colMeans(main_posterior$alpha)), 
+     lwd = 3, yaxt = "n", ylab = "", xaxt = "n", xlab = "", type = "l", lty = 1, 
+     col = rgb(1,0,0,0.5))
+par(new = TRUE)
+plot(log10(seq_along(y)), log10(colMeans(control_posterior$alpha)), 
+     lwd = 3, yaxt = "n", ylab = "", xaxt = "n", xlab = "", type = "l", lty = 2, 
+     col = rgb(0,0,1,0.5))
+legend("bottomleft", legend = c("y", "Main", "Control"),
+       lwd = 3, lty = c(3,1,2), col = c("black", "red", "blue"))
+
+# theta
+plot(log10(seq_along(y)), log10(y), 
+     lwd = 3, yaxt = "n", ylab = "log10(x)", xlab = "rank(x)", type = "l",
+     lty = 3, main = expression(paste("Comparing ", theta)))
+par(new = TRUE)
+plot(log10(seq_along(y)), log10(colMeans(main_posterior$theta)), 
+     lwd = 3, yaxt = "n", ylab = "", xaxt = "n", xlab = "", type = "l", lty = 1, 
+     col = rgb(1,0,0,0.5))
+par(new = TRUE)
+plot(log10(seq_along(y)), log10(colMeans(control_posterior$theta)), 
+     lwd = 3, yaxt = "n", ylab = "", xaxt = "n", xlab = "", type = "l", lty = 2, 
+     col = rgb(0,0,1,0.5))
+legend("bottomleft", legend = c("y", "Main", "Control"),
+       lwd = 3, lty = c(3,1,2), col = c("black", "red", "blue"))
+
+
