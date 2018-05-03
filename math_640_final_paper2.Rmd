@@ -181,7 +181,7 @@ control_chains <- TmParallelApply(control_chains, function(x){
   result
   
 }, cpus = 2, export = c("y", "B", "control_sampler"), 
-   libraries = c("gtools", "EnvStats", "coda"))
+   libraries = c("gtools", "EnvStats", "coda", "statmod"))
 
 # check acceptance rate
 control_alpha_acc <- sapply(control_chains, function(x) mean(x$acc_alpha))
@@ -270,7 +270,7 @@ main_chains <- TmParallelApply(main_chains, function(x){
   result
   
 }, cpus = 2, export = c("y", "B", "main_sampler"), 
-   libraries = c("gtools", "EnvStats", "coda"))
+   libraries = c("gtools", "EnvStats", "coda", "statmod"))
 
 # check acceptance rate
 main_alpha_acc <- sapply(main_chains, function(x) mean(x$acc_alpha))
