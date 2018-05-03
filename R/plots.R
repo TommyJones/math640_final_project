@@ -38,19 +38,37 @@ rownames(alpha_acc_table) <- c("min.", "25%", "50%", "75%", "max.")
 knitr::kable(alpha_acc_table, digits = 2)
 
 # check convergence
-conv_table <- data.frame(main_theta_conv, main_alpha_conv,
-                         control_theta_conv, control_alpha_conv,
-                         stringsAsFactors = FALSE)
+
+conv <- parallel::mclapply(list(main = main_posterior, control = control_posterior), 
+                           function(x){
+                             apply(x$theta,1,function(z) dmultinom(y, prob = z, log = T))
+                           })
 
 par(mfrow = c(2,1), mar = c(2.1,4.1,2.1,2.1))
-plot(rowMeans(main_posterior$alpha), type = "l",
+plot(conv$main, type = "l",
      main = "Main model", col = "red", xaxt = "n", xlab = "",
-     ylab = expression(alpha))
+     ylab = expression(paste("log[P(y|",theta,")]")))
 abline(v = c(1000,2000,3000))
-plot(rowMeans(main_posterior$alpha), type = "l",
+plot(conv$control, type = "l",
      main = "Control model", col = "blue", xaxt = "n", xlab = "",
-     ylab = expression(alpha))
+     ylab = expression(paste("log[P(y|",theta,")]")))
 abline(v = c(1000,2000,3000))
+
+g <- lapply(conv, geweke.diag)
+
+# conv_table <- data.frame(main_theta_conv, main_alpha_conv,
+#                          control_theta_conv, control_alpha_conv,
+#                          stringsAsFactors = FALSE)
+# 
+# par(mfrow = c(2,1), mar = c(2.1,4.1,2.1,2.1))
+# plot(rowMeans(main_posterior$alpha), type = "l",
+#      main = "Main model", col = "red", xaxt = "n", xlab = "",
+#      ylab = expression(alpha))
+# abline(v = c(1000,2000,3000))
+# plot(rowMeans(main_posterior$alpha), type = "l",
+#      main = "Control model", col = "blue", xaxt = "n", xlab = "",
+#      ylab = expression(alpha))
+# abline(v = c(1000,2000,3000))
 
 
 # get indices of max, median, 3rd quartile words
@@ -100,24 +118,45 @@ lines(d2, col = "blue", lwd = 4, lty = 2)
 
 
 # calculate DIC for each model
-calc_dic <- function(y, theta_mat) {
+calc_dic <- function(y, theta_mat, B = NULL) {
   
   llik <- apply(theta_mat, 1, function(x) dmultinom(y, prob = x, log = TRUE))
   
   pdic <- 2 * var(llik)
   
-  dic <- -2 * dmultinom(y, prob = colMeans(theta_mat)) + 2 * pdic
+  
+  if (! is.null(B)) {
+    dic <- sapply(seq_len(B), function(th){
+      -2 * dmultinom(y, prob = theta_mat[ sample(seq_len(nrow(theta_mat)), 1) , ], log = TRUE)
+    })
+    
+    dic <- dic + 2 * pdic
+  } else {
+    dic <- -2 * dmultinom(y, prob = colMeans(theta_mat), log = TRUE) + 2 * pdic
+  }
   
   dic
   
 }
 
-main_dic <- calc_dic(y, main_posterior$theta)
+main_dic <- calc_dic(y, main_posterior$theta, B = 10000)
 
-control_dic <- calc_dic(y, control_posterior$theta)
+control_dic <- calc_dic(y, control_posterior$theta, B = 10000)
 
-barplot(c(Main = main_dic, Control = control_dic), col = c("red", "blue"),
-        density = c(-1,25))
+d1 <- density(main_dic)
+
+d2 <- density(control_dic)
+
+plot(d1, col = "red", lwd = 4,
+     main = "Posterior DIC",
+     xlim = range(c(d1$x, d2$x)))
+lines(d2, col = "blue", lwd = 4, lty = 2)
+abline(v = quantile(main_dic, probs = c(0.025, 0.5, 0.975)), col = "red", lwd = 2)
+abline(v = quantile(control_dic, probs = c(0.025, 0.5, 0.975)), col = "blue", lwd = 2, lty = 2)
+
+
+# barplot(c(Main = main_dic, Control = control_dic), col = c("red", "blue"),
+#         density = c(-1,25))
 
 # log-log plots of alpha and theta vs. y
 
