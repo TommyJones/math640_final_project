@@ -19,7 +19,7 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
     theta_k ^ alpha_k
   }
   
-  j_alpha <- function(mu = 0.1, prob = FALSE, n = NULL, x = NULL, rate = 0.01) {
+  j_alpha <- function(mu = 1, prob = FALSE, n = NULL, x = NULL, rate = 0.1) {
     # if prob is false, draw a sample, otherwise find p(x)
     if (! prob) {
       # out <- rexp(n = n, rate = rate)
@@ -102,8 +102,13 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
 # summary(result$acc_alpha)
 # 
 # # geweke diagnostic
-# g <- apply(result$alpha, 2, function(x) geweke.diag(x[ (B/4):B ])$z)
+# # g <- apply(result$alpha, 2, function(x) geweke.diag(x[ (B/4):B ])$z)
+# # 
+# # # by random chance, expect 5% to be greater than 1.96
+# # mean(abs(g) >= 1.96 | is.na(g))
 # 
-# # by random chance, expect 5% to be greater than 1.96
-# mean(abs(g) >= 1.96 | is.na(g))
-
+# g <- apply(result$theta, 1, function(x) dmultinom(y, prob = x, log = T))
+# 
+# plot(g[(B/2):B], type = "l")
+# 
+# geweke.diag(g[(B/2):B])

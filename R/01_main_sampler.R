@@ -20,16 +20,18 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
     alpha_k ^ (-beta - 1) * theta_k ^ alpha_k
   }
   
-  j_alpha <- function(mu = 0.1, prob = FALSE, n = NULL, x = NULL, rate = 0.01) {
+  j_alpha <- function(mu = 1, prob = FALSE, n = NULL, x = NULL, rate = 0.1) {
     # if prob is false, draw a sample, otherwise find p(x)
     if (! prob) {
       # out <- rexp(n = n, rate = rate)
       out <- rinvgauss(n = n, mean = mu, shape = rate)
       # out <- rpareto(n = n, location = mu, shape = rate)
+      # out <- rhalfcauchy(n = n, scale = rate)
     } else {
       # out <- dexp(x, rate)
       out <- dinvgauss(x, mean = mu, shape = rate)
       # out <- dpareto(x, location = mu, shape = rate)
+      # out <- dhalfcauchy(x, scale = rate)
     }
     
     out
@@ -107,7 +109,7 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
 # y <- y[ 1:k ]
 # 
 # # run sampler
-# B <- 10000
+# B <- 50000
 # 
 # result <- main_sampler(y = y, B = B, seed = 8675309,
 #                        theta0 = y / sum(y), alpha0 = rep(0.1,length(y)),
@@ -119,10 +121,13 @@ main_sampler <- function(y, B, seed, theta0, alpha0, beta0, gamma) {
 # summary(result$acc_alpha)
 # 
 # # geweke diagnostic
-# g <- apply(result$alpha, 2, function(x) geweke.diag(x[ (B/4):B ])$z)
+# # g <- apply(result$alpha, 2, function(x) geweke.diag(x[ (B/4):B ])$z)
+# # # by random chance, expect 5% to be greater than 1.96
+# # mean(abs(g) >= 1.96 | is.na(g))
+# # sum(is.na(g))
 # 
-# # by random chance, expect 5% to be greater than 1.96
-# mean(abs(g) >= 1.96 | is.na(g))
+# g <- apply(result$theta, 1, function(x) dmultinom(y, prob = x, log = T))
 # 
-# sum(is.na(g))
-
+# plot(g[(B/2):B], type = "l")
+# 
+# geweke.diag(g[(B/2):B])
