@@ -454,8 +454,11 @@ main_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$
                        alpha = do.call(rbind, lapply(main_chains, function(x) x$alpha)),
                        beta = do.call(c, lapply(main_chains, function(x) x$beta)))
 
+```
 
-#### begin massive dump of code to be parsed into different chunks soon
+
+
+```{r}
 # check acceptance rates
 main_alpha_acc <- sapply(main_chains, function(x) x$acc_alpha)
 
@@ -476,7 +479,12 @@ alpha_acc_table <- data.frame(Main = quantile(rowMeans(main_alpha_acc), c(0,0.25
 rownames(alpha_acc_table) <- c("min.", "25%", "50%", "75%", "max.")
 
 knitr::kable(alpha_acc_table, digits = 2)
+```
 
+
+
+Convergence is based on log likelihood of both models
+```{r}
 # check convergence
 
 conv <- parallel::mclapply(list(main = main_posterior, control = control_posterior), 
@@ -496,20 +504,16 @@ abline(v = c(1000,2000,3000))
 
 g <- lapply(conv, geweke.diag)
 
-# conv_table <- data.frame(main_theta_conv, main_alpha_conv,
-#                          control_theta_conv, control_alpha_conv,
-#                          stringsAsFactors = FALSE)
-# 
-# par(mfrow = c(2,1), mar = c(2.1,4.1,2.1,2.1))
-# plot(rowMeans(main_posterior$alpha), type = "l",
-#      main = "Main model", col = "red", xaxt = "n", xlab = "",
-#      ylab = expression(alpha))
-# abline(v = c(1000,2000,3000))
-# plot(rowMeans(main_posterior$alpha), type = "l",
-#      main = "Control model", col = "blue", xaxt = "n", xlab = "",
-#      ylab = expression(alpha))
-# abline(v = c(1000,2000,3000))
+g <- data.frame(Main = g[[1]]$z, Control = g[[2]]$z)
 
+rownames(g) <- ""
+
+knitr::kable(data.frame(g),digits = 2, caption = "Geweke statistic of log likelihoods")
+```
+
+
+```{r}
+# MCMC plots
 
 # get indices of max, median, 3rd quartile words
 q <- quantile(y, c(1,0.95, 0.75))
@@ -543,6 +547,10 @@ b <- matrix(main_posterior$beta, ncol = 1)
 colnames(b) <- "beta"
 mcmcplot1(b, greek = TRUE, col = "red")
 
+```
+
+
+```{r}
 # log posterior comparison
 main_p <- apply(main_posterior$theta,1,function(x) dmultinom(y, prob = x, log = TRUE))
 
@@ -556,7 +564,10 @@ plot(d1, col = "red", lwd = 4,
      xlim = range(c(d1$x, d2$x)))
 lines(d2, col = "blue", lwd = 4, lty = 2)
 
+```
 
+
+```{r}
 # calculate DIC for each model
 calc_dic <- function(y, theta_mat, B = NULL) {
   
@@ -598,6 +609,12 @@ abline(v = quantile(control_dic, probs = c(0.025, 0.5, 0.975)), col = "blue", lw
 # barplot(c(Main = main_dic, Control = control_dic), col = c("red", "blue"),
 #         density = c(-1,25))
 
+```
+
+
+
+
+```{r}
 # log-log plots of alpha and theta vs. y
 
 # alpha
