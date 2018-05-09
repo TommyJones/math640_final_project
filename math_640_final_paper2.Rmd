@@ -36,10 +36,9 @@ One method that researchers currently use to model text frequencies is with a Di
 
 Zipf's law is an empirical property of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. This means that the most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. (citations needed) Based on what Zipf's law dictates, this research tests the viability of placing a Pareto($\gamma$, $\beta$) prior on $\vec{\alpha}$, where $\gamma$ is fixed at a sufficiently small value. This Pareto distribution is a power-law that should provide some uncertainty on $\vec{\alpha}$ that mirrors this inherent property of language.  
 
-In order to determine whether this prior merits further research on more complex models, we will begin by modeling a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a Pareto hyper-prior, with a non-informative Jeffrey's hyper-prior . We will compare this model to a control that does not allow for uncertainty on $\vec{\alpha}$. The data set is 100 randomly sampled NIH grant abstracts from 2014.
+In order to determine whether this prior merits further research on more complex models, we will begin by modeling a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a Pareto hyper-prior, with a non-informative Jeffery's hyper-prior . We will compare this model to a control that does not allow for uncertainty on $\vec{\alpha}$. The data set is 100 randomly sampled NIH grant abstracts from 2014.
 
 # Methods 
-
 
 ## Models
 
@@ -61,7 +60,7 @@ The control model will stop here, and assume a uniform distibution on $\alpha_k$
 p(\alpha_k|\theta_k, y_k)\propto \theta_k^{\alpha_k}
 \end{align}
 
-The candidate model, however, will assume a $Pareto(\gamma, \beta$) prior on $\alpha_k$, with Jeffrey's prior on $\beta$.
+The candidate model, however, will assume a $Pareto(\gamma, \beta$) prior on $\alpha_k$, with Jeffery's prior on $\beta$.
 
 \begin{align}
 \alpha_k \sim Pareto(\gamma, \beta) \implies \pi(\vec{\alpha}) &= \prod_k \gamma^\beta\beta\alpha_k^{-(\beta + 1)}\\
@@ -93,8 +92,8 @@ Of these conditional posteriors, only $\vec{\alpha}|\vec{\theta},\beta,\vec{y}$ 
 ##Sampling
 
 ### Data
+The NIH provides grant abstracts to the public, and these documents provide a perfect data set upon which to test our model. The data set contains 5,542 unique words. Figure 1 shows the properties of Zipf's law in the data set. In the histogram, it is evident just how much mass is in the right tail of the distribution. It shows that the overwhelming majority of the words occur less than 100 times, despite the fact that the most frequent word, 'the', occurs 1,928 times. The right side of figure 1 shows a log transformation of the word count and the rank. When graphed in this way, power laws appear as a straight line. This shows that our data set does indeed follow a power law, despite some noise toward the lower end of the distribution. This is a common result, and given a larger sample, this noise would be reduced.  
 
-The NIH provides grant abstracts to the public, and these documents provide a perfect data set upon which to test our model. The data set contains 5,542 unique words. Figure 1 shows the properties of Zipf's law in the data set. In the histogram, it is evident just how much mass is in the right tail of the distribution. It shows that the overwhelming majority of the words occur less than 100 times, despite the fact that the most frequent word, 'the', occurs 1,928 times. The right side of figure 1 shows a log transformation of the word count and the rank. When graphed in this way, power laws appear as a straight line. This shows that our data set does indeed follow a power law, despite some noise toward the lower end of the distribution. This is a common result, and given a larger sample, this noise would be reduced.   
 ```{r, out.width='.49\\linewidth', fig.width=3, fig.height=3,fig.show='hold',fig.align='center'}
 # load and prepare the data
 dtm <- CreateDtm(doc_vec = nih_sample$ABSTRACT_TEXT, # nih_sample from textmineR
@@ -124,6 +123,7 @@ plot(log10(as.numeric(f$y)), log10(f$Freq), type = "l", lwd = 3,
 
 
 \begin{center}Figure 1:Histogram of Word counts (left) and  Log-log plot of word counts, ordered by rank (right). \end{center}
+
 ### Samplers
 
 ```{r control_sampler}
@@ -445,7 +445,7 @@ save.image('.RData')
 ```
 
 
-```{r}
+```{r combination}
 # Combine the results from the chains
 control_posterior <- list(theta = do.call(rbind, lapply(control_chains, function(x) x$theta)),
                        alpha = do.call(rbind, lapply(control_chains, function(x) x$alpha)))
@@ -470,103 +470,34 @@ alpha_acc_table <- data.frame(Main = quantile(rowMeans(main_alpha_acc), c(0,0.25
 
 rownames(alpha_acc_table) <- c("min.", "25%", "50%", "75%", "max.")
 
-kable_styling(kable(alpha_acc_table, format = "latex", booktabs = T, caption = "Table 1: Acceptance Rates"),position = "float_right")
+kable_styling(kable(alpha_acc_table, format = "latex", caption = "Acceptance Rates"),position = "float_right")
 
 ```
-As discussed above, to sample from these conditional distributions, we had to create Gibb's samplers using metropolis-hastings components. For both the control and the man model, we used an Inverse-Gaussian to sample from the condtional posterior on $\alpha$, and sampled directly from the conditional posteriors of the other paramters. While the acceptance rates for $\alpha$ are not ideal, they did provid....Short description of acceptance rates here....must finalize proposal for control...... Figure 2 plots the density of the acceptance rates, showing the majority of the mass in an indeal range. 
+As discussed above, to sample from these conditional distributions, we had to create Gibb's samplers using metropolis-hastings components. For both the control and the man model, we used an Inverse-Gaussian to sample from the conditional posterior on $\alpha$, and sampled directly from the conditional posteriors of the other parameters. Table 1 provides a summary of the distributions of the acceptance rates. While the acceptance rates are diverse for each element of $\alpha$, they all fall within an acceptable range. 
 
+In order to asses the convergence of the samplers, we found the Geweke statistic for the log transformed likelihood of each model. The control model shows convergence with this statistic (p=.02), but the main model is well outside the typical range for a convergent sample(p=-2.5). Convergence for this sampler is extremely difficult to achieve, and may be impossible. Many proposal densities were attempted, and none allowed this sample to converge. This is but one of the flaws of our main model. We also have inspected some visual convergence diagnostics (Appendix C), but they all indicate that the control has converged and the main model has not. 
 
-```{r accept_plot, fig.align = 'center', fig.width = 6.5, fig.height = 3}
-
-plot(density(rowMeans(control_alpha_acc)), lwd = 4, col = "blue", lty = 2,
-     main = expression(paste("Acceptance rates of ", alpha, " parameters in both models")),
-     xlab = "Acceptance rate",
-     xlim = range(control_alpha_acc, main_alpha_acc))
-lines(density(rowMeans(main_alpha_acc)), lwd = 4, lty = 1, col = "red")
-legend("topleft", legend = c("Main", "Control"), lwd = 4, lty = c(1,3),
-       col = c("red", "blue"))
-
-```
-\begin{center} Figure 2: Plot of acceptance rates of $\alpha$. \end{center}
-
-
-Convergence is based on log likelihood of both models
-
-
-```{r convergence}
-# check convergence
-
+```{r converg_table, include = F}
 conv <- parallel::mclapply(list(main = main_posterior, control = control_posterior), 
                            function(x){
                              apply(x$theta,1,function(z) dmultinom(y, prob = z, log = T))
                            })
 
 par(mfrow = c(2,1), mar = c(2.1,4.1,2.1,2.1))
-plot(conv$main, type = "l",
-     main = "Main model", col = "red", xaxt = "n", xlab = "",
-     ylab = expression(paste("log[P(y|",theta,")]")))
-abline(v = c(1000,2000,3000))
-plot(conv$control, type = "l",
-     main = "Control model", col = "blue", xaxt = "n", xlab = "",
-     ylab = expression(paste("log[P(y|",theta,")]")))
-abline(v = c(1000,2000,3000))
-
 g <- lapply(conv, geweke.diag)
 
 g <- data.frame(Main = g[[1]]$z, Control = g[[2]]$z)
 
 rownames(g) <- ""
 
-kable(data.frame(g),digits = 2, caption = "Geweke statistic of log likelihoods")
+kable(data.frame(g),digits = 2, format = 'latex', caption = "Geweke statistic of log likelihoods")
+
 ```
 
 ##Comparison
 
-We should put some posterior plots here, maybe
 
-MCMC plots of selected words
-
-```{r mcmc_plots}
-# MCMC plots
-
-# get indices of max, median, 3rd quartile words
-q <- quantile(y, c(1,0.95, 0.75))
-
-ind <- sapply(q, function(x) which(y == x)[1])
-
-# look at ACF/mcmcplot
-
-capture <- lapply(ind, function(k){
-  a <- matrix(main_posterior$alpha[,k], ncol = 1)
-  colnames(a) <- "alpha"
-  mcmcplot1(a, greek = TRUE, col = "red")
-  
-  a <- matrix(control_posterior$alpha[,k], ncol = 1)
-  colnames(a) <- "alpha"
-  mcmcplot1(a, greek = TRUE)
-  
-})
-
-capture <- lapply(ind, function(k){
-  a <- matrix(main_posterior$theta[,k], ncol = 1)
-  colnames(a) <- "theta"
-  mcmcplot1(a, greek = TRUE, col = "red")
-  
-  a <- matrix(control_posterior$theta[,k], ncol = 1)
-  colnames(a) <- "theta"
-  mcmcplot1(a, greek = TRUE)
-})
-
-b <- matrix(main_posterior$beta, ncol = 1)
-colnames(b) <- "beta"
-mcmcplot1(b, greek = TRUE, col = "red")
-
-```
-
-
-log posterior
-
-```{r log_post}
+```{r log_post, fig.height = 3, fig.width=4}
 # log posterior comparison
 main_p <- apply(main_posterior$theta,1,function(x) dmultinom(y, prob = x, log = TRUE))
 
@@ -1048,7 +979,7 @@ main_posterior <- list(theta = do.call(rbind, lapply(main_chains, function(x) x$
 
 
 
-```{r , eval = F, echo = T}
+```{r accept_stuff, eval = F, echo = T}
 # check acceptance rates
 main_alpha_acc <- sapply(main_chains, function(x) x$acc_alpha)
 
@@ -1301,11 +1232,56 @@ p(\beta)&\propto\beta^k (\prod_k\alpha_k)^{-(\beta + 1)}\\
 \pi(\beta)&\propto \frac{1}{\beta}
 \end{align}
 
+# Appendix C
 
+```{r mcmc_plots, fig.height=4, fig.width=4}
+# MCMC plots
 
+# get indices of max, median, 3rd quartile words
+q <- quantile(y, c(1,0.95, 0.75))
 
+ind <- sapply(q, function(x) which(y == x)[1])
 
+# look at ACF/mcmcplot
 
+capture <- lapply(ind, function(k){
+  a <- matrix(main_posterior$alpha[,k], ncol = 1)
+  colnames(a) <- "alpha"
+  mcmcplot1(a, greek = TRUE, col = "red")
+  
+  a <- matrix(control_posterior$alpha[,k], ncol = 1)
+  colnames(a) <- "alpha"
+  mcmcplot1(a, greek = TRUE)
+  
+})
+
+capture <- lapply(ind, function(k){
+  a <- matrix(main_posterior$theta[,k], ncol = 1)
+  colnames(a) <- "theta"
+  mcmcplot1(a, greek = TRUE, col = "red")
+  
+  a <- matrix(control_posterior$theta[,k], ncol = 1)
+  colnames(a) <- "theta"
+  mcmcplot1(a, greek = TRUE)
+})
+
+b <- matrix(main_posterior$beta, ncol = 1)
+colnames(b) <- "beta"
+mcmcplot1(b, greek = TRUE, col = "red")
+
+```
+
+```{r convergence, out.width='.49\\linewidth', fig.width=3, fig.height=3,fig.show='hold',fig.align='center'}
+# check convergence
+plot(conv$main, type = "l",
+     main = "Main model", col = "red", xaxt = "n", xlab = "",
+     ylab = expression(paste("log[P(y|",theta,")]")))
+abline(v = c(1000,2000,3000))
+plot(conv$control, type = "l",
+     main = "Control model", col = "blue", xaxt = "n", xlab = "",
+     ylab = expression(paste("log[P(y|",theta,")]")))
+abline(v = c(1000,2000,3000))
+```
 
 
 
