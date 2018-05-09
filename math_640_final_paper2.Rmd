@@ -7,6 +7,7 @@ header-includes:
 output:
   pdf_document:
     number_sections: true
+geometry: margin=.7in
 ---
 
 ```{r setup, include=FALSE}
@@ -94,7 +95,7 @@ Of these conditional posteriors, only $\vec{\alpha}|\vec{\theta},\beta,\vec{y}$ 
 ### Data
 The NIH provides grant abstracts to the public, and these documents provide a perfect data set upon which to test our model. The data set contains 5,542 unique words. Figure 1 shows the properties of Zipf's law in the data set. In the histogram, it is evident just how much mass is in the right tail of the distribution. It shows that the overwhelming majority of the words occur less than 100 times, despite the fact that the most frequent word, 'the', occurs 1,928 times. The right side of figure 1 shows a log transformation of the word count and the rank. When graphed in this way, power laws appear as a straight line. This shows that our data set does indeed follow a power law, despite some noise toward the lower end of the distribution. This is a common result, and given a larger sample, this noise would be reduced.  
 
-```{r, out.width='.49\\linewidth', fig.width=3, fig.height=3,fig.show='hold',fig.align='center'}
+```{r, out.width='.49\\linewidth', fig.width=3, fig.height=3,fig.show='hold',fig.align='center', fig.cap='Histogram of Word counts (left) and  Log-log plot of word counts, ordered by rank (right).'}
 # load and prepare the data
 dtm <- CreateDtm(doc_vec = nih_sample$ABSTRACT_TEXT, # nih_sample from textmineR
                  doc_names = nih_sample$APPLICATION_ID,
@@ -122,7 +123,7 @@ plot(log10(as.numeric(f$y)), log10(f$Freq), type = "l", lwd = 3,
 ```
 
 
-\begin{center}Figure 1:Histogram of Word counts (left) and  Log-log plot of word counts, ordered by rank (right). \end{center}
+
 
 ### Samplers
 
@@ -496,8 +497,20 @@ kable(data.frame(g),digits = 2, format = 'latex', caption = "Geweke statistic of
 
 ##Comparison
 
+For the comparison of the models, we calculated the deviance information criterion for each estimate of $\alpha$, creating a distribution of DICs. This distribution is shown in figure XX. We also provide the plot of the densities of the log-likelelihood of each estimate of $\alpha$ (Figure XX). 
 
-```{r log_post, fig.height = 3, fig.width=4}
+# Results 
+
+Figures XX and XX provide fairly conclusive evidence that the main model does is not better than the control. Figure XX DIC plot shows that the control model has a much lower DIC, and the credible intervals for these estimates do not overlap. This suggests that the control is a better model. The log-likelihood plot also shows that the control model is more likely, although with some overlap of distribution.  
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{log_likelihood.jpeg}
+  \end{center}
+  \caption{Birds}
+\end{wrapfigure}
+
+```{r log_post, fig.height = 3, fig.width=4, include=F}
 # log posterior comparison
 main_p <- apply(main_posterior$theta,1,function(x) dmultinom(y, prob = x, log = TRUE))
 
@@ -514,7 +527,7 @@ lines(d2, col = "blue", lwd = 4, lty = 2)
 ```
 
 
-DIC, now in distribution form!
+text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text 
 
 ```{r DIC_dist}
 # calculate DIC for each model
@@ -560,6 +573,7 @@ abline(v = quantile(control_dic, probs = c(0.025, 0.5, 0.975)), col = "blue", lw
 
 ```
 
+# Discussion
 
 full circle: zipfs law and our models
 
@@ -597,12 +611,6 @@ legend("bottomleft", legend = c("y", "Main", "Control"),
        lwd = 3, lty = c(3,1,2), col = c("black", "red", "blue"))
 ```
 
-
-
-
-# Results 
-
-# Discussion
 
 
 # References
