@@ -135,7 +135,7 @@ control_sampler <- function(y, B, seed, theta0, alpha0) {
     theta_k ^ alpha_k
   }
   
-  j_alpha <- function(mu = 1, prob = FALSE, n = NULL, x = NULL, rate = 0.1) {
+  j_alpha <- function(mu = .1, prob = FALSE, n = NULL, x = NULL, rate = 0.01) {
     # if prob is false, draw a sample, otherwise find p(x)
     if (! prob) {
       # out <- rexp(n = n, rate = rate)
@@ -473,7 +473,7 @@ rownames(alpha_acc_table) <- c("min.", "25%", "50%", "75%", "max.")
 kable_styling(kable(alpha_acc_table, format = "latex", booktabs = T, caption = "Table 1: Acceptance Rates"),position = "float_right")
 
 ```
-As discussed above, to sample from these conditional distributions, we had to create Gibb's samplers using metropolis-hastings components. For both the control and the man model, we used an Inverse-Gaussian to sample from the condtional posterior on $\alpha$, and sampled directly from the conditional posteriors of the other paramters. This is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is whereThis is where
+As discussed above, to sample from these conditional distributions, we had to create Gibb's samplers using metropolis-hastings components. For both the control and the man model, we used an Inverse-Gaussian to sample from the condtional posterior on $\alpha$, and sampled directly from the conditional posteriors of the other paramters. While the acceptance rates for $\alpha$ are not ideal, they did provid....Short description of acceptance rates here....must finalize proposal for control...... Figure 2 plots the density of the acceptance rates, showing the majority of the mass in an indeal range. 
 
 
 ```{r accept_plot, fig.align = 'center', fig.width = 6.5, fig.height = 3}
@@ -487,7 +487,7 @@ legend("topleft", legend = c("Main", "Control"), lwd = 4, lty = c(1,3),
        col = c("red", "blue"))
 
 ```
-Figure 2: Plot of acceptance rates of $\alpha$.
+\begin{center} Figure 2: Plot of acceptance rates of $\alpha$. \end{center}
 
 
 Convergence is based on log likelihood of both models
@@ -517,8 +517,9 @@ g <- data.frame(Main = g[[1]]$z, Control = g[[2]]$z)
 
 rownames(g) <- ""
 
-knitr::kable(data.frame(g),digits = 2, caption = "Geweke statistic of log likelihoods")
+kable(data.frame(g),digits = 2, caption = "Geweke statistic of log likelihoods")
 ```
+
 ##Comparison
 
 We should put some posterior plots here, maybe
