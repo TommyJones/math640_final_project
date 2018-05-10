@@ -30,7 +30,7 @@ library(kableExtra)
 
 \newpage
 # Introduction
-Analyzing text data is of interest to frequentists and Bayesians. Text stores information that is not easily evaluated with well-understood statistical methods. Textual data is not as well understood as numerical data. In this paper, we explore two alternatives for modeling text. 
+Analyzing text data is of interest to frequentists and Bayesians. Text stores information that is not easily evaluated with well-understood statistical methods. More generally, textual data is not as well understood as numerical data. In this paper, we explore two alternatives for modeling text from a Bayesian perspective. 
 
 Word frequencies may be modeled as a multinomial distribution with a Dirichlet prior and (possibly) a uniform hyperprior. This specification models uncertainty on the probability of words, $\vec{\theta}$, and uncertainty on the Dirichlet prior parameter, $\vec{\alpha}$. The uniform hyperprior is totally non-informative. Yet an empirical law of language, Zipf's law, hints at an informative prior. We hope to use Zipf's law to provide principled uncertainty on $\vec{\alpha}$ in the hopes of improving the model. 
 
