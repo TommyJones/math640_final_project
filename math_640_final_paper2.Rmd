@@ -643,8 +643,18 @@ legend("bottomleft", legend = c("y", "Main", "Control"),
 
 \newpage
 # References
-##make sure to cite the data source
-##Cite info on Zipf's law
+
+Meyers, G. (1994). Quantifying the Uncertainty in Claim Severity Estimates for an Excess Layer When Using the Single Parameter Pareto.
+In Proceedings of the Casualty Actuarial Society (Vol. 81, pp. 91-122).
+
+Zipf, G. K. (2016). Human behavior and the principle of least effort: An introduction to human ecology. Ravenio Books.
+
+Manaris, B. Z., Pellicoro, L., Pothering, G., & Hodges, H. (2006, February).      Investigating Esperanto's Statistical Proportions Relative to
+other Languages using Neural Networks and Zipf's Law. In Artificial               Intelligence and Applications (pp. 102-108).
+
+National Institutes of Health. (2014). NIH ExPORTER. Retrieved from        
+http://exporter.nih.gov/ExPORTER_Catalog.aspx (January 2015)
+
 
 
 # Appendix A
