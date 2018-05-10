@@ -7,7 +7,7 @@ header-includes:
 output:
   pdf_document:
     number_sections: true
-geometry: margin=.7in
+geometry: margin=1in
 ---
 
 ```{r setup, include=FALSE}
@@ -55,7 +55,7 @@ On $\vec{\theta}$, the vector of word probabilities, we place a Dirichlet prior.
 \vec{\theta} \sim Dir(\vec{\alpha}) \implies \pi(\vec{\theta}) = \mathcal{B}(\vec{\alpha})\prod_k \theta_k^{\alpha_k - 1}
 \end{align}
 
-The control model will stop here, and assume a uniform distibution on $\alpha_k$. The control model then has the simple form $\vec{\theta}|\vec{y}, \vec{\alpha} \sim Dir(\vec{y}+\vec{\alpha})$, and an unknown distribution for $\vec{\alpha}|\vec{y}, \vec{\beta}$; shown below (the full derivation can be found in Appendix B). We will sample from $\vec{\alpha}|\vec{y}, \vec{\beta}$ with an Inverse-Gaussian proposal. 
+The control model will stop here, and assume a uniform distribution on $\alpha_k$. The control model then has the simple form $\vec{\theta}|\vec{y}, \vec{\alpha} \sim Dir(\vec{y}+\vec{\alpha})$, and an unknown distribution for $\vec{\alpha}|\vec{y}, \vec{\beta}$; shown below (the full derivation can be found in Appendix B). We will sample from $\vec{\alpha}|\vec{y}, \vec{\beta}$ with an Inverse-Gaussian proposal. 
 
 \begin{align}
 p(\alpha_k|\theta_k, y_k)\propto \theta_k^{\alpha_k}
@@ -474,6 +474,7 @@ rownames(alpha_acc_table) <- c("min.", "25%", "50%", "75%", "max.")
 kable_styling(kable(alpha_acc_table, format = "latex", caption = "Acceptance Rates"),position = "float_right")
 
 ```
+
 As discussed above, to sample from these conditional distributions, we had to create Gibb's samplers using metropolis-hastings components. For both the control and the man model, we used an Inverse-Gaussian to sample from the conditional posterior on $\alpha$, and sampled directly from the conditional posteriors of the other parameters. Table 1 provides a summary of the distributions of the acceptance rates. While the acceptance rates are diverse for each element of $\alpha$, they all fall within an acceptable range. 
 
 In order to asses the convergence of the samplers, we found the Geweke statistic for the log transformed likelihood of each model. The control model shows convergence with this statistic (p=.02), but the main model is well outside the typical range for a convergent sample(p=-2.5). Convergence for this sampler is extremely difficult to achieve, and may be impossible. Many proposal densities were attempted, and none allowed this sample to converge. This is but one of the flaws of our main model. We also have inspected some visual convergence diagnostics (Appendix C), but they all indicate that the control has converged and the main model has not. 
@@ -497,18 +498,29 @@ kable(data.frame(g),digits = 2, format = 'latex', caption = "Geweke statistic of
 
 ##Comparison
 
-For the comparison of the models, we calculated the deviance information criterion for each estimate of $\alpha$, creating a distribution of DICs. This distribution is shown in figure XX. We also provide the plot of the densities of the log-likelelihood of each estimate of $\alpha$ (Figure XX). 
+\begin{wrapfigure}[9]{r}{0.45\textwidth}
+  \begin{center}
+    \includegraphics[width=0.45\textwidth]{log_likelihood.jpeg}
+    \vspace{-10pt}
+  \end{center}
+  \caption{Distribution of log-likelihoods.}
+\end{wrapfigure}
+
+For the comparison of the models, we calculated the deviance information criterion for each estimate of $\alpha$, creating a distribution of DICs. This distribution is shown in figure 2. We also provide the plot of the densities of the log-likelihood of each estimate of $\alpha$ (Figure 2). 
 
 # Results 
 
-Figures XX and XX provide fairly conclusive evidence that the main model does is not better than the control. Figure XX DIC plot shows that the control model has a much lower DIC, and the credible intervals for these estimates do not overlap. This suggests that the control is a better model. The log-likelihood plot also shows that the control model is more likely, although with some overlap of distribution.  
+Figures 2 and 3 provide fairly conclusive evidence that the main model does is not better than the control. Figure XX DIC plot shows that the control model has a much lower DIC, and the credible intervals for these estimates do not overlap. This suggests that the control is a better model. The log-likelihood plot also shows that the control model is more likely, although with some overlap of distribution.  
 
-\begin{wrapfigure}{r}{0.5\textwidth}
+\begin{wrapfigure}[15]{l}{0.5\textwidth}
   \begin{center}
-    \includegraphics[width=0.48\textwidth]{log_likelihood.jpeg}
+    \includegraphics[width=0.48\textwidth]{dic_dist.jpeg}
+    \vspace{-10pt}
+  \caption{Distribution of DICs; vertical lines indicate the median and credible intervals.}
   \end{center}
-  \caption{Birds}
 \end{wrapfigure}
+
+
 
 ```{r log_post, fig.height = 3, fig.width=4, include=F}
 # log posterior comparison
@@ -527,9 +539,8 @@ lines(d2, col = "blue", lwd = 4, lty = 2)
 ```
 
 
-text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text text 
 
-```{r DIC_dist}
+```{r DIC_dist, include = F}
 # calculate DIC for each model
 calc_dic <- function(y, theta_mat, B = NULL) {
   
@@ -575,9 +586,11 @@ abline(v = quantile(control_dic, probs = c(0.025, 0.5, 0.975)), col = "blue", lw
 
 # Discussion
 
-full circle: zipfs law and our models
+The main model did not significantly improve upon the control. Indeed, the main model drastically increased the complexity of the process, without improving the estimation. Both the DIC distribution, and the distribution of the log-likelihood show that this model does not improve the fit of the predictions. In conjunction with the convergence issues, this model seems to have no redeeming features despite its increased complexity. The lesson of this experiment seems to be that increased complexity does not necessarily mean better estimation. 
 
-```{r model_plots}
+The main model did not significantly improve upon the control. Indeed, the main model drastically increased the complexity of the process, without improving the estimation. Both the DIC distribution, and the distribution of the log-likelihood show that this model does not improve the fit of the predictions. In conjunction with the convergence issues, this model seems to have no redeeming features despite its increased complexity. The lesson of this experiment seems to be that increased complexity does not necessarily mean better estimation. The main model did not significantly improve upon the control. Indeed, the main model drastically increased the complexity of the process, without improving the estimation. Both the DIC distribution, and the distribution of the log-likelihood show that this model does not improve the fit of the predictions. In conjunction with the convergence issues, this model seems to have no redeeming features despite its increased complexity. The lesson of this experiment seems to be that increased complexity does not necessarily mean better estimation. The main model did not significantly improve upon the control. Indeed, the main model drastically increased the complexity of the process, without improving the estimation. Both the DIC distribution, and the distribution of the log-likelihood show that this model does not improve the fit of the predictions. In conjunction with the convergence issues, this model seems to have no redeeming features despite its increased complexity. The lesson of this experiment seems to be that increased complexity does not necessarily mean better estimation. The main model did not significantly improve upon the control. Indeed, the main model drastically increased the complexity of the process, without improving the estimation. Both the DIC distribution, and the distribution of the log-likelihood show that this model does not improve the fit of the predictions. In conjunction with the convergence issues, this model seems to have no redeeming features despite its increased complexity. The lesson of this experiment seems to be that increased complexity does not necessarily mean better estimation. 
+
+```{r model_plots, include = F}
 # log-log plots of alpha and theta vs. y
 
 # alpha
@@ -613,6 +626,8 @@ legend("bottomleft", legend = c("y", "Main", "Control"),
 
 
 
+
+\newpage
 # References
 ##make sure to cite the data source
 ##Cite info on Zipf's law
