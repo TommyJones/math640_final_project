@@ -42,11 +42,11 @@ Word frequencies may be modeled as a multinomial distribution with a Dirichlet p
   \end{center}
 \end{wrapfigure}
 
-Zipf's law is an empirical propety of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. The most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. 
+Zipf's law is an empirical property of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. The most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. 
 
 Informed by Zipf's law, we place a $Pareto(\gamma,\beta)$ prior on $\vec{\alpha}$. We assume $\gamma$ is fixed at the small value of 0.01. We hypothesize that the elements of $\vec{\alpha}$ are proportional to the data, $\vec{y}$, based on the law of total expectation. This is shown in figure 1. The Pareto distribution is a power-law that should provide some uncertainty on $\vec{\alpha}$ that mirrors this inherent property of language.
 
-In order to determine whether this prior merits further research on more complex models, we model a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a Pareto hyper-prior, with a non-informative Jeffery's hyper-prior . We compare this model to a control that does not allow for uncertainty on $\vec{\alpha}$. Our data set is 100 randomly sampled NIH grant abstracts from 2014.
+In order to determine whether this prior merits further research on more complex models, we model a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a Pareto hyper-prior, with a non-informative Jeffery's hyper-prior. We compare this model to a control that has a non-informative uniform prior on $\vec{\alpha}$. Our data set is 100 randomly sampled NIH grant abstracts from 2014.
 
 # Methods 
 
@@ -484,11 +484,11 @@ kable_styling(kable(alpha_acc_table, format = "latex", caption = "Acceptance Rat
 
 ```
 
-As discussed above, to sample from these conditional distributions, our samplers have both Gibbs and Metropolis-Hastings components. For both the control and the man model, we used an Inverse-Gaussian to sample from the conditional posterior on $\alpha$. For the control model, the Inverse-Gaussian parameters are $\mu = 0.1$ and $\lambda = 0.01$. For the main model, the Inverse-Gaussian parameters are $\mu = 1$ and $\lambda = 0.01$. We ran four chains of 20,000 iterations each.
+As discussed above, to sample from these conditional distributions, our samplers have both Gibbs and Metropolis-Hastings components. For both the control and the main model, we used an Inverse-Gaussian to sample from the conditional posterior on $\alpha$. For the control model, the Inverse-Gaussian parameters are $\mu = 0.1$ and $\lambda = 0.01$. For the main model, the Inverse-Gaussian parameters are $\mu = 1$ and $\lambda = 0.01$. We ran four chains of 20,000 iterations each.
 
 Table 1 provides a summary of the distributions of the acceptance rates for each element of $\vec{\alpha}$. While the acceptance rates are diverse for each element of $\vec{\alpha}$, they all fall within an acceptable range for both models.
 
-We use the Geweke statistic on the log posterior liklihood of each model to assess convergence. The control model shows convergence with this statistic (p=.02), but the main model is well outside the typical range for a convergent sample(p=-2.5). Convergence for this sampler is extremely difficult to achieve, and may be impossible. We attempt many proposal distributions, and none allowed this sample to converge within a reasonable number of iterations. This is one of the flaws of our main model. We also inspect some visual convergence diagnostics (Appendix C), but they all indicate that the control has converged and the main model has not. 
+We use the Geweke statistic on the log posterior likelihood of each model to assess convergence. The control model shows convergence with this statistic (p=.02), but the main model is well outside the typical range for a convergent sample(p=-2.5). Convergence for this sampler is extremely difficult to achieve, and may be impossible. We attempt many proposal distributions, and none allowed this sample to converge within a reasonable number of iterations. This is one of the flaws of our main model. We also inspect some visual convergence diagnostics (Appendix C), but they all indicate that the control has converged and the main model has not. 
 
 ```{r converg_table, include = F}
 conv <- parallel::mclapply(list(main = main_posterior, control = control_posterior), 
@@ -509,7 +509,7 @@ kable(data.frame(g),digits = 2, format = 'latex', caption = "Geweke statistic of
 
 ##Comparison
 
-\begin{wrapfigure}[9]{r}{0.45\textwidth}
+\begin{wrapfigure}[8]{r}{0.45\textwidth}
   \begin{center}
     \includegraphics[width=0.45\textwidth]{log_likelihood.jpeg}
     \vspace{-10pt}
@@ -520,7 +520,7 @@ kable(data.frame(g),digits = 2, format = 'latex', caption = "Geweke statistic of
 For the comparison of the models, we calculate the deviance information criterion (DIC) for each estimate of $\alpha$, creating a distribution of DICs. This distribution is shown in figure 3. We also provide the plot of the densities of the log-likelihood of each estimate of $\alpha$ (Figure 3). 
 
 # Results 
-We find mixed evidence that the main model is an improvement. In figure 3, the log posterior liklihood corresponding to the control model is markedly higher than the main model. In figure 4, the DIC corresponding to the main model is lower. (With DIC, lower is better.) Given this mixed evidence together with the increased complexity of the main model and its lack of convergence, we do not believe the main model improves upon the control.
+We find mixed evidence that the main model is an improvement. In figure 3, the log posterior likelihood corresponding to the control model is markedly higher than the main model. In figure 4, the DIC corresponding to the main model is lower. (With DIC, lower is better.) Given this mixed evidence together with the increased complexity of the main model and its lack of convergence, we do not believe the main model improves upon the control.
 
 \begin{wrapfigure}[15]{l}{0.5\textwidth}
   \begin{center}
@@ -720,7 +720,7 @@ p(\beta)&\propto\beta^k (\prod_k\alpha_k)^{-(\beta + 1)}\\
 
 # Appendix C
 
-```{r mcmc_plots, fig.height=4, fig.width=4}
+```{r mcmc_plots_alpha, fig.width=3.5, fig.pos='left'}
 # MCMC plots
 
 # get indices of max, median, 3rd quartile words
@@ -740,6 +740,12 @@ capture <- lapply(ind, function(k){
   mcmcplot1(a, greek = TRUE)
   
 })
+```
+Figure 6: Visual MCMC diagnostics for $\alpha$ for words at the 100th, 95th, and 75th percentiles, from top to bottom. The words are 'the' (1,928 occurences), 'regulation' (18 occurences), and 'men' (4 occurences). The main model is on the left in red and the control is on the right in blue. Diagnostics confirm that the main model is not convergent. The main models show high autocorrelation, and abberant running mean and trace plots. The density plots, though, do show some resemblance to a pareto distribution. Convergence diagnostics for the control appear normal.
+
+
+\newpage
+```{r mcmc_plots_theta, fig.width=3.5}
 
 capture <- lapply(ind, function(k){
   a <- matrix(main_posterior$theta[,k], ncol = 1)
@@ -750,6 +756,12 @@ capture <- lapply(ind, function(k){
   colnames(a) <- "theta"
   mcmcplot1(a, greek = TRUE)
 })
+```
+
+Figure 7: Visual MCMC diagnostics for $\theta$ for words at the 100th, 95th, and 75th percentiles, from top to bottom. The words are 'the' (1,928 occurences), 'regulation' (18 occurences), and 'men' (4 occurences). The main model is on the left in red and the control is on the right in blue. Everything looks normal as far as convergence, which is expected as they were sampled directly. There is little to report for these plots, except that there starts to be some positive skew in $\theta$ as word frequency declines. 
+
+\newpage
+```{r mcmc_plots_beta, fig.width=3.5, fig.pos = 'center'}
 
 b <- matrix(main_posterior$beta, ncol = 1)
 colnames(b) <- "beta"
@@ -757,19 +769,29 @@ mcmcplot1(b, greek = TRUE, col = "red")
 
 ```
 
-```{r convergence, out.width='.49\\linewidth', fig.width=3, fig.height=3,fig.show='hold',fig.align='center'}
+Figure 8: MCMC plots for $\beta$ for the main model, showing a very small value.
+
+
+\newpage
+
+```{r convergence_main}
 # check convergence
 plot(conv$main, type = "l",
      main = "Main model", col = "red", xaxt = "n", xlab = "",
      ylab = expression(paste("log[P(y|",theta,")]")))
 abline(v = c(1000,2000,3000))
+```
+Figure 9: Visual Convergence Diagnostics of the main model, showing some hints that the main model does not converge. Vertical lines indicate the start of a new chain.
+
+
+```{r convergence_control}
 plot(conv$control, type = "l",
      main = "Control model", col = "blue", xaxt = "n", xlab = "",
      ylab = expression(paste("log[P(y|",theta,")]")))
 abline(v = c(1000,2000,3000))
 ```
 
-
+Figure 10: Visual Convergence Diagnostics of the control model, showing normal convergence. Vertical lines indicate the start of a new chain.
 
 
 
