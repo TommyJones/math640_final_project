@@ -35,7 +35,15 @@ The analysis of text data is an area of vital research in both frequentist and B
 
 One method that researchers currently use to model text frequencies is with a Dirichlet prior on a Multinomial likelihood. The prior provides uncertainty on $\vec{\theta}$, which is the vector of word probabilities. The usual model then assumes a non-informative uniform prior on the Dirichlet parameter ($\vec{\alpha}$). In a Bayesian setting, however, this approach seems overly simplistic, and MCMC methods provide a simple solution to sample from a more complex distribution. This research intends to start to answer the question as to whether more uncertainty on $\vec{\alpha}$ would improve the model. Zipf's law provides a basis for how to vary $\vec{\alpha}$ in a way that is consistent with knowledge about human language. 
 
-Zipf's law is an empirical property of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. This means that the most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. (citations needed) Based on what Zipf's law dictates, this research tests the viability of placing a Pareto($\gamma$, $\beta$) prior on $\vec{\alpha}$, where $\gamma$ is fixed at a sufficiently small value. This Pareto distribution is a power-law that should provide some uncertainty on $\vec{\alpha}$ that mirrors this inherent property of language.  
+\begin{wrapfigure}[15]{r}{0.25\textwidth}
+  \begin{center}
+    \includegraphics[width=0.25\textwidth]{math.png}
+    \vspace{-10pt}
+  \caption{$\alpha$ is roughly proportional to a power law.}
+  \end{center}
+\end{wrapfigure}
+
+Zipf's law is an empirical property of natural language. It states that the word frequencies of any corpus of text follows a power law distribution, regardless of context or language. This means that the most common word will be twice as frequent as the second most common word, and $n$ times as frequent as the $n$th most common word. Based on what Zipf's law dictates, this research tests the viability of placing a Pareto($\gamma$, $\beta$) prior on $\vec{\alpha}$, where $\gamma$ is fixed at a sufficiently small value. We hypothesize that $\alpha$ is roughly proportional to the data, which is distributed as a power-law, per Zipf's law. The justification for this hypothesis is shown in figure 1. This Pareto distribution is a power-law that should provide some uncertainty on $\vec{\alpha}$ that mirrors this inherent property of language.  
 
 In order to determine whether this prior merits further research on more complex models, we will begin by modeling a small data set using a simple model that features a multinomial likelihood, a Dirichlet prior, a Pareto hyper-prior, with a non-informative Jeffery's hyper-prior . We will compare this model to a control that does not allow for uncertainty on $\vec{\alpha}$. The data set is 100 randomly sampled NIH grant abstracts from 2014.
 
@@ -93,7 +101,7 @@ Of these conditional posteriors, only $\vec{\alpha}|\vec{\theta},\beta,\vec{y}$ 
 ##Sampling
 
 ### Data
-The NIH provides grant abstracts to the public, and these documents provide a perfect data set upon which to test our model. The data set contains 5,542 unique words. Figure 1 shows the properties of Zipf's law in the data set. In the histogram, it is evident just how much mass is in the right tail of the distribution. It shows that the overwhelming majority of the words occur less than 100 times, despite the fact that the most frequent word, 'the', occurs 1,928 times. The right side of figure 1 shows a log transformation of the word count and the rank. When graphed in this way, power laws appear as a straight line. This shows that our data set does indeed follow a power law, despite some noise toward the lower end of the distribution. This is a common result, and given a larger sample, this noise would be reduced.  
+The NIH provides grant abstracts to the public, and these documents provide a perfect data set upon which to test our model. The data set contains 5,542 unique words. Figure 2 shows the properties of Zipf's law in the data set. In the histogram, it is evident just how much mass is in the right tail of the distribution. It shows that the overwhelming majority of the words occur less than 100 times, despite the fact that the most frequent word, 'the', occurs 1,928 times. The right side of figure 2 shows a log transformation of the word count and the rank. When graphed in this way, power laws appear as a straight line. This shows that our data set does indeed follow a power law, despite some noise toward the lower end of the distribution. This is a common result, and given a larger sample, this noise would be reduced.  
 
 ```{r, out.width='.49\\linewidth', fig.width=3, fig.height=3,fig.show='hold',fig.align='center', fig.cap='Histogram of Word counts (left) and  Log-log plot of word counts, ordered by rank (right).'}
 # load and prepare the data
@@ -506,11 +514,11 @@ kable(data.frame(g),digits = 2, format = 'latex', caption = "Geweke statistic of
   \caption{Distribution of log-likelihoods.}
 \end{wrapfigure}
 
-For the comparison of the models, we calculated the deviance information criterion for each estimate of $\alpha$, creating a distribution of DICs. This distribution is shown in figure 2. We also provide the plot of the densities of the log-likelihood of each estimate of $\alpha$ (Figure 2). 
+For the comparison of the models, we calculated the deviance information criterion for each estimate of $\alpha$, creating a distribution of DICs. This distribution is shown in figure 3. We also provide the plot of the densities of the log-likelihood of each estimate of $\alpha$ (Figure 3). 
 
 # Results 
 
-Figures 2 and 3 provide fairly conclusive evidence that the main model does is not better than the control. Figure XX DIC plot shows that the control model has a much lower DIC, and the credible intervals for these estimates do not overlap. This suggests that the control is a better model. The log-likelihood plot also shows that the control model is more likely, although with some overlap of distribution.  
+Figures 3 and 4 provide fairly conclusive evidence that the main model does is not better than the control. Figure 4 shows that the control model has a much lower DIC, and the credible intervals for these estimates do not overlap. This suggests that the control is a better model. The log-likelihood plot in figure 3 also shows that the control model is more likely, although with some overlap of distribution.  
 
 \begin{wrapfigure}[15]{l}{0.5\textwidth}
   \begin{center}
@@ -588,12 +596,15 @@ abline(v = quantile(control_dic, probs = c(0.025, 0.5, 0.975)), col = "blue", lw
 
 The main model did not significantly improve upon the control. Indeed, the main model drastically increased the complexity of the process, without improving the estimation. Both the DIC distribution, and the distribution of the log-likelihood show that this model does not improve the fit of the predictions. In conjunction with the convergence issues, this model seems to have no redeeming features despite its increased complexity. The lesson of this experiment seems to be that increased complexity does not necessarily mean better estimation. 
 
+Figure 5 shows the log-log plot of the data, compared to the two models. Our hypothesis that $\alpha$ is roughly proportional to the data is somewhat borne out by this plot in the control model. The experimental model also has a similar slope, although the lack of convergence is displaying noise on this plot as well.
 
-The main model did not significantly improve upon the control. Indeed, the main model drastically increased the complexity of the process, without improving the estimation. Both the DIC distribution, and the distribution of the log-likelihood show that this model does not improve the fit of the predictions. In conjunction with the convergence issues, this model seems to have no redeeming features despite its increased complexity. The lesson of this experiment seems to be that increased complexity does not necessarily mean better estimation.
+In figure 5, we compare the two models' estimates of $\theta$. The two models are nearly identical, and this result makes sense based on inspection of the conditional distribution of $\theta$. The model is dominated by the data, so changes in $\alpha$ have little impact on the estimation of $\theta$. This result confirms that even with convergence of alpha in the experimental model would not provide a meaningful improvement in estimation. 
+
+ 
 
 
 
-```{r model_plots, include = T, out.width='.49\\linewidth', fig.width=5, fig.height=4,fig.show='hold',fig.align='center', fig.cap='Histogram of Word counts (left) and  Log-log plot of word counts, ordered by rank (right).'}
+```{r model_plots, include = T, out.width='.49\\linewidth', fig.width=5, fig.height=4,fig.show='hold',fig.align='center', fig.cap='Comparison of the log-log transformation of the models and the data (left) and  comparison of the probabilty estimates of the models and the data (right).'}
 # log-log plots of alpha and theta vs. y
 
 # alpha
